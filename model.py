@@ -2,15 +2,6 @@ import torch.nn as nn
 from torch.nn import Sequential
 
 
-class Flatten(nn.Module):
-    """
-    Implement a simple custom module that reshapes (n, m, 1, 1) tensors to (n, m).
-    """
-
-    def forward(self, input):
-        return input.view(input.size(0), input.size(1))
-
-
 def cnn_module():
     """
     Create a nn.Sequential model containing all of the layers of the CNN model as specified in the paper.
