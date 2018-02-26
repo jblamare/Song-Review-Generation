@@ -3,46 +3,27 @@ import os
 
 
 class NPY():
-    """ Load the NPY dataset
-
-        Ensure NPY_PATH is path to directory containing
-        all data files (.npy) provided on Kaggle.
-
-        Example usage:
-            loader = NPY()
-            trainX, trainY = loader.train
-            assert(trainX.shape[0] == 24590)
-
-    """
 
     def __init__(self):
         self.train_set = None
         self.test_set = None
 
-    #@property
-    def train(self, preprocessed):
-        if preprocessed:
-            name = 'train_prep'
-        else:
-            name = 'train'
+    @property
+    def train(self):
         if self.train_set is None:
-            self.train_set = load_raw(os.environ['NPY_PATH'], name)
+            self.train_set = load_raw(os.environ['AUDIO_PATH'], 'magnatagatune_1')
         return self.train_set
 
-    #@property
-    def test(self, preprocessed):
-        if preprocessed:
-            name = 'test_prep_feats.npy'
-        else:
-            name = 'test_feats.npy'
+    @property
+    def test(self):
         if self.test_set is None:
             self.test_set = (np.load(os.path.join(
-                os.environ['NPY_PATH'], name), encoding='bytes'), None)
+                os.environ['AUDIO_PATH'], ''), encoding='bytes'), None)
         return self.test_set
 
 
 def load_raw(path, name):
     return (
-        np.load(os.path.join(path, '{}_feats.npy'.format(name)), encoding='bytes'),
+        np.load(os.path.join(path, '{}_features.npy'.format(name)), encoding='bytes'),
         np.load(os.path.join(path, '{}_labels.npy'.format(name)), encoding='bytes')
     )

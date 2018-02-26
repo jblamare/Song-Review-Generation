@@ -1,43 +1,13 @@
-"""
-Refer to handout for details.
-- Build scripts to train your model
-- Submit your code to Autolab
-"""
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from npy_loader import NPY
-from all_cnn import cnn_module
+from model import cnn_module
 from custom_dataset import CustomDataset
-
-
-# def write_results(predictions, output_file='predictions.txt'):
-#     """
-#     Write predictions to file for submission.
-#     File should be:
-#         named 'predictions.txt'
-#         in the root of your tar file
-#     :param predictions: iterable of integers
-#     :param output_file:  path to output file.
-#     :return: None
-#     """
-#     with open(output_file, 'w') as f:
-#         for y in predictions:
-#             f.write("{}\n".format(int(y)))
-
-
-def preprocess():
-    loader = NPY()
-    X_train, Y_train = loader.train(False)
-    X_test, _ = loader.test(False)
-    print("Starting preprocessing...")
-    X_train, X_test = cifar_10_preprocess(X_train, X_test)
-    print("Done")
-    np.save("dataset/train_prep_feats.npy", X_train)
-    np.save("dataset/train_prep_labels.npy", Y_train)
-    np.save("dataset/test_prep_feats.npy", X_test)
+from torchnet.meter import AUCMeter
+import matplotlib.pyplot as plt
 
 
 def init_xavier(m):
@@ -46,17 +16,46 @@ def init_xavier(m):
         m.bias.data.fill_(0)
 
 
+def inference(model, loader, n_members):
+    model.eval()
+    correct = 0
+    for data, labels in loader:
+        X = Variable(data).cuda()
+        Y = Variable(labels).cuda()
+        out = model(X)
+        pred = (out.data > 0.5).long()
+        predicted = pred.eq(Y.data.view_as(pred))
+        correct += predicted.sum()
+    return correct / n_members
+
+
+def inference_auc(model, loader):
+    model.eval()
+    auc = AUCMeter()
+    for data, labels in loader:
+        X = Variable(data).cuda()
+        out = model(X)
+        auc_out = np.reshape(out.data.cpu().numpy(), -1)
+        auc_target = np.reshape(labels, -1)
+        auc.add(auc_out, auc_target)
+    auc_tuple = auc.value()
+    print("AUC = ", auc_tuple[0])
+    plt.plot(auc_tuple[2], auc_tuple[1])
+    plt.plot([0, 1])
+    plt.show()
+
+
 def main():
     # Hyperparameters
+    segment_size = 27
     batch_size = 32
-    epochs = 20
+    epochs = 5
     learning_rate = 0.01
     momentum = 0.9
     regularization = 0.001
 
     print("Loading datasets...")
-    train_data = CustomDataset('train')
-    test_data = CustomDataset('test')
+    train_data = CustomDataset('train', segment_size)
     train_size = len(train_data)
 
     val_size, train_size = int(0.20 * train_size), int(0.80 * train_size)  # 80 / 20 train-val split
@@ -84,34 +83,24 @@ def main():
             X = Variable(data).cuda()
             Y = Variable(label).cuda()
             out = model(X)
-            pred = out.data.max(1, keepdim=True)[1]
+            pred = (out.data > 0.5).long()
             predicted = pred.eq(Y.data.view_as(pred))
             correct += predicted.sum()
-            loss_function = nn.CrossEntropyLoss()
+            loss_function = nn.MultiLabelMarginLoss()
             loss = loss_function(out, Y)
             loss.backward()
             optimizer.step()
             epoch_loss += loss.data[0]
         total_loss = epoch_loss/batch_number
-        train_accuracy = correct/train_size
-        val_accuracy = inference(model, val_loader, val_size)
+        train_accuracy = correct/(train_size*188)
+        val_auc = inference(model, val_loader, (val_size*188))
         print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
         print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
-        print("Epoch: {0}, val_accuracy: {1:.8f}".format(e+1, val_accuracy))
-    print("Finished training")
+        print("Epoch: {0}, val_auc: {1:.8f}".format(e+1, val_auc))
 
-    # print("Begin testing...")
-    # y = np.array([])
-    # for data in test_loader:
-    #     X = Variable(data).cuda()
-    #     out = model(X)
-    #     pred = out.data.max(1, keepdim=True)[1]
-    #     pred = pred.cpu().numpy().reshape(-1,)
-    #     y = np.concatenate((y, pred))
-    # write_results(y)
-    # print("Finished testing")
+    inference_auc(model, val_loader)
+    print("Finished training")
 
 
 if __name__ == '__main__':
-    # preprocess()
     main()
