@@ -9,7 +9,7 @@ import librosa
 from settings import sample_rate, window, n_fft, hop_length, n_mels, n_mfcc, C, DATA_FOLDER
 
 block_size = 2000
-offset = 16000
+offset = 0
 
 
 def extract_features(audio_path):
@@ -26,7 +26,7 @@ def extract_features(audio_path):
 
 
 def handle_row(annotation_row):
-    labels = np.asarray(annotation_row[1:-1])
+    labels = np.asarray(annotation_row[1:-1], dtype='int_')
     path = annotation_row[-1]
     features = extract_features(os.path.join(DATA_FOLDER, path))
     return features, labels
@@ -37,9 +37,10 @@ if __name__ == '__main__':
     pool = Pool(4)
     features = []
     labels = []
+    label_count = np.zeros(188, dtype='int_')
 
 
-    with open(os.path.join(DATA_FOLDER, 'annotations_final.csv')) as annotation_file:
+    with open(os.path.join(DATA_FOLDER, 'annotations_randomized.csv')) as annotation_file:
 
         annotation_reader = csv.reader(annotation_file, delimiter='\t')
         next(annotation_reader)
@@ -68,3 +69,6 @@ if __name__ == '__main__':
 
             features.append(song_features)
             labels.append(song_labels)
+            label_count += song_labels
+
+    np.save(os.path.join(DATA_FOLDER, 'label_count.npy'), label_count)
