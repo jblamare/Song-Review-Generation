@@ -17,8 +17,7 @@ def extract_features(audio_path):
     try:
         y, sr = librosa.load(audio_path, sr=sample_rate)
     except EOFError:
-        print(audio_path)
-        raise EOFError
+        return None
     D = np.abs(librosa.stft(y, window=window, n_fft=n_fft, hop_length=hop_length)) ** 2
     D = np.log(1 + C * D)
     S = librosa.feature.melspectrogram(S=D, y=y, n_mels=n_mels)
@@ -51,9 +50,6 @@ if __name__ == '__main__':
 
         for i, (song_features, song_labels) in enumerate(pool.imap_unordered(handle_row, annotation_reader)):
 
-            features.append(song_features)
-            labels.append(song_labels)
-
 
             if i % block_size == 0 and i > 0:
                 labels = np.asarray(labels)
@@ -64,3 +60,11 @@ if __name__ == '__main__':
                 del labels
                 features = []
                 labels = []
+
+
+            if song_features is None:
+                print('empty file detected')
+                continue
+
+            features.append(song_features)
+            labels.append(song_labels)
