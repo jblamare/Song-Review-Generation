@@ -51,7 +51,7 @@ def main():
     segment_size = 27
     batch_size = 16
     epochs = 5
-    learning_rate = 0.0001
+    learning_rate = 0.0000000001
     momentum = 0.9
     regularization = 0.01
 
@@ -72,7 +72,7 @@ def main():
     print("Begin training...")
     model = cnn_module().cuda()
     model.apply(init_xavier)
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=regularization)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     for e in range(epochs):
         epoch_loss = 0
         correct = 0

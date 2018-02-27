@@ -9,4 +9,4 @@ window = "hann"
 C=10
 DATA_FOLDER = os.path.join('../mp3/')
 number_sets = 2
-number_labels = 188
+number_labels = 10
