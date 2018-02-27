@@ -1,5 +1,4 @@
 from torch.utils.data import Dataset
-from torch import Tensor
 from npy_loader import NPY
 import numpy as np
 

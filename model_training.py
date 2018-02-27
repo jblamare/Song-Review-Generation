@@ -96,7 +96,7 @@ def main():
         val_auc = inference(model, val_loader, (val_size*188))
         print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
         print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
-        print("Epoch: {0}, val_auc: {1:.8f}".format(e+1, val_auc))
+        print("Epoch: {0}, val_accuracy: {1:.8f}".format(e+1, val_auc))
 
     inference_auc(model, val_loader)
     print("Finished training")

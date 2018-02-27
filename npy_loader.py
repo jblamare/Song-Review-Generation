@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from settings import DATA_FOLDER
 
 
 class NPY():
@@ -11,14 +12,14 @@ class NPY():
     @property
     def train(self):
         if self.train_set is None:
-            self.train_set = load_raw(os.environ['AUDIO_PATH'], 'magnatagatune_1')
+            self.train_set = load_raw(DATA_FOLDER, 'magnatagatune_1')
         return self.train_set
 
     @property
     def test(self):
         if self.test_set is None:
             self.test_set = (np.load(os.path.join(
-                os.environ['AUDIO_PATH'], ''), encoding='bytes'), None)
+                DATA_FOLDER, ''), encoding='bytes'), None)
         return self.test_set
 
 
