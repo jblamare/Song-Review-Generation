@@ -8,6 +8,7 @@ from model import cnn_module
 from custom_dataset import CustomDataset
 from torchnet.meter import AUCMeter
 import matplotlib.pyplot as plt
+from settings import number_labels
 
 
 def init_xavier(m):
@@ -92,8 +93,8 @@ def main():
             optimizer.step()
             epoch_loss += loss.data[0]
         total_loss = epoch_loss/batch_number
-        train_accuracy = correct/(train_size*188)
-        val_auc = inference(model, val_loader, (val_size*188))
+        train_accuracy = correct/(train_size*number_labels)
+        val_auc = inference(model, val_loader, (val_size*number_labels))
         print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
         print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
         print("Epoch: {0}, val_auc: {1:.8f}".format(e+1, val_auc))

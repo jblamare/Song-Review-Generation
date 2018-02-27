@@ -1,5 +1,6 @@
 import torch.nn as nn
 from torch.nn import Sequential
+from settings import number_labels
 
 
 class GetSize(nn.Module):
@@ -39,7 +40,7 @@ def cnn_module():
         nn.Linear(in_features=256, out_features=256),
         nn.ReLU(),
         nn.Dropout(0.5),
-        nn.Linear(in_features=256, out_features=188),
+        nn.Linear(in_features=256, out_features=number_labels),
         Reshape(),
         nn.AvgPool1d(kernel_size=138),
         Flatten(),
