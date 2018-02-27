@@ -50,10 +50,10 @@ def main():
     # Hyperparameters
     segment_size = 27
     batch_size = 16
-    epochs = 5
-    learning_rate = 0.0001
+    epochs = 10
+    learning_rate = 0.0005
     momentum = 0.9
-    regularization = 0.01
+    regularization = 0.001
 
     print("Loading datasets...")
     train_data = CustomDataset('train', segment_size)
@@ -81,15 +81,12 @@ def main():
             batch_number += 1
             optimizer.zero_grad()
             X = Variable(data).cuda()
-            Y = Variable(label).cuda()
+            Y = Variable(label).cuda().float()
             out = model(X)
-            pred = (out.data > 0.50).long()
-            if e == epochs - 1:
-                print(out)
-                print(pred)
+            pred = (out.data > 0.50).float()
             predicted = pred.eq(Y.data.view_as(pred))
             correct += predicted.sum()
-            loss_function = nn.MultiLabelMarginLoss()
+            loss_function = nn.MultiLabelSoftMarginLoss()
             loss = loss_function(out, Y)
             loss.backward()
             optimizer.step()
