@@ -24,7 +24,7 @@ def inference(model, loader, n_members):
         X = Variable(data).cuda()
         Y = Variable(labels).cuda()
         out = model(X)
-        pred = (out.data > 0.5).long()
+        pred = (out.data > 0.50).long()
         predicted = pred.eq(Y.data.view_as(pred))
         correct += predicted.sum()
     return correct / n_members
@@ -49,11 +49,11 @@ def inference_auc(model, loader):
 def main():
     # Hyperparameters
     segment_size = 27
-    batch_size = 32
+    batch_size = 16
     epochs = 5
-    learning_rate = 0.01
+    learning_rate = 0.0001
     momentum = 0.9
-    regularization = 0.001
+    regularization = 0.01
 
     print("Loading datasets...")
     train_data = CustomDataset('train', segment_size)
@@ -72,8 +72,7 @@ def main():
     print("Begin training...")
     model = cnn_module().cuda()
     model.apply(init_xavier)
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate,
-                                momentum=momentum, nesterov=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=regularization)
     for e in range(epochs):
         epoch_loss = 0
         correct = 0
@@ -84,7 +83,10 @@ def main():
             X = Variable(data).cuda()
             Y = Variable(label).cuda()
             out = model(X)
-            pred = (out.data > 0.5).long()
+            pred = (out.data > 0.50).long()
+            if e == epochs - 1:
+                print(out)
+                print(pred)
             predicted = pred.eq(Y.data.view_as(pred))
             correct += predicted.sum()
             loss_function = nn.MultiLabelMarginLoss()
@@ -94,10 +96,10 @@ def main():
             epoch_loss += loss.data[0]
         total_loss = epoch_loss/batch_number
         train_accuracy = correct/(train_size*number_labels)
-        val_auc = inference(model, val_loader, (val_size*number_labels))
+        val_accuracy = inference(model, val_loader, (val_size*number_labels))
         print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
         print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
-        print("Epoch: {0}, val_auc: {1:.8f}".format(e+1, val_auc))
+        print("Epoch: {0}, val_accuracy: {1:.8f}".format(e+1, val_accuracy))
 
     inference_auc(model, val_loader)
     print("Finished training")
