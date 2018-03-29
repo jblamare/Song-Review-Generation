@@ -5,16 +5,16 @@ import numpy as np
 
 class CustomDataset(Dataset):
 
-    def __init__(self, type, segment_size):
+    def __init__(self, type, segment_size, first):
 
         loader = NPY()
         self.segment_size = segment_size
 
         if type == 'train':
-            self.X, self.Y = loader.train
+            self.X, self.Y = loader.train(first)
             self.Y = self.Y.astype(np.int64)
-        if type == 'test':
-            self.X, self.Y = loader.test
+        # if type == 'test':
+        #     self.X, self.Y = loader.test
 
         self.X = self.X.astype(np.float32)
         self.n_frames = self.X[0].shape[1]
@@ -38,7 +38,7 @@ class CustomDataset(Dataset):
 
 
 if __name__ == "__main__":
-    train_data = CustomDataset('train', 27)
+    train_data = CustomDataset('train', 27, 1)
     print(len(train_data))
     print(train_data[0][0].shape)
     print(train_data[0][1].shape)

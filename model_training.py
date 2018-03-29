@@ -8,7 +8,7 @@ from model import cnn_module
 from custom_dataset import CustomDataset
 from torchnet.meter import AUCMeter
 import matplotlib.pyplot as plt
-from settings import number_labels
+from settings import number_labels, segment_size, batch_size, epochs, learning_rate, momentum, number_sets
 
 
 def init_xavier(m):
@@ -41,65 +41,65 @@ def inference_auc(model, loader):
         auc.add(auc_out, auc_target)
     auc_tuple = auc.value()
     print("AUC = ", auc_tuple[0])
-    plt.plot(auc_tuple[2], auc_tuple[1])
-    plt.plot([0, 1])
-    plt.show()
+    # plt.plot(auc_tuple[2], auc_tuple[1])
+    # plt.plot([0, 1])
+    # plt.show()
 
 
 def main():
-    # Hyperparameters
-    segment_size = 27
-    batch_size = 16
-    epochs = 10
-    learning_rate = 0.0005
-    momentum = 0.9
-    regularization = 0.001
-
-    print("Loading datasets...")
-    train_data = CustomDataset('train', segment_size)
-    train_size = len(train_data)
-
-    val_size, train_size = int(0.20 * train_size), int(0.80 * train_size)  # 80 / 20 train-val split
-
-    train_loader = torch.utils.data.DataLoader(train_data,
-                                               batch_size=batch_size,
-                                               sampler=torch.utils.data.sampler.SubsetRandomSampler(np.arange(val_size, val_size+train_size)))
-    val_loader = torch.utils.data.DataLoader(train_data,
-                                             batch_size=batch_size,
-                                             sampler=torch.utils.data.sampler.SubsetRandomSampler(np.arange(0, val_size)))
-    print("Datasets loaded")
-
-    print("Begin training...")
     model = cnn_module().cuda()
     model.apply(init_xavier)
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=regularization)
-    for e in range(epochs):
-        epoch_loss = 0
-        correct = 0
-        batch_number = 0
-        for data, label in train_loader:
-            batch_number += 1
-            optimizer.zero_grad()
-            X = Variable(data).cuda()
-            Y = Variable(label).cuda().float()
-            out = model(X)
-            pred = (out.data > 0.50).float()
-            predicted = pred.eq(Y.data.view_as(pred))
-            correct += predicted.sum()
-            loss_function = nn.MultiLabelSoftMarginLoss()
-            loss = loss_function(out, Y)
-            loss.backward()
-            optimizer.step()
-            epoch_loss += loss.data[0]
-        total_loss = epoch_loss/batch_number
-        train_accuracy = correct/(train_size*number_labels)
-        val_accuracy = inference(model, val_loader, (val_size*number_labels))
-        print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
-        print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
-        print("Epoch: {0}, val_accuracy: {1:.8f}".format(e+1, val_accuracy))
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        lr=learning_rate,
+        momentum=momentum,
+        nesterov=True
+    )
+    for start in range(1, 13, number_sets):
+        print("Loading datasets...", start)
+        train_data = CustomDataset('train', segment_size, start)
+        train_size = len(train_data)
 
-    inference_auc(model, val_loader)
-    print("Finished training")
+        val_size, train_size = int(0.20 * train_size), int(0.80 *
+                                                           train_size)  # 80 / 20 train-val split
+
+        train_loader = torch.utils.data.DataLoader(train_data,
+                                                   batch_size=batch_size,
+                                                   sampler=torch.utils.data.sampler.SubsetRandomSampler(np.arange(val_size, val_size+train_size)))
+        val_loader = torch.utils.data.DataLoader(train_data,
+                                                 batch_size=batch_size,
+                                                 sampler=torch.utils.data.sampler.SubsetRandomSampler(np.arange(0, val_size)))
+        print("Datasets loaded")
+
+        print("Begin training...")
+        for e in range(epochs):
+            epoch_loss = 0
+            correct = 0
+            batch_number = 0
+            model.train()
+            for data, label in train_loader:
+                batch_number += 1
+                optimizer.zero_grad()
+                X = Variable(data).cuda()
+                Y = Variable(label).cuda().float()
+                out = model(X)
+                pred = (out.data > 0.50).float()
+                predicted = pred.eq(Y.data.view_as(pred))
+                correct += predicted.sum()
+                loss_function = nn.MultiLabelSoftMarginLoss()
+                loss = loss_function(out, Y)
+                loss.backward()
+                optimizer.step()
+                epoch_loss += loss.data[0]
+            total_loss = epoch_loss/batch_number
+            train_accuracy = correct/(train_size*number_labels)
+            val_accuracy = inference(model, val_loader, (val_size*number_labels))
+            print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
+            print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
+            print("Epoch: {0}, val_accuracy: {1:.8f}".format(e+1, val_accuracy))
+
+        inference_auc(model, val_loader)
+        print("Finished training")
 
 
 if __name__ == '__main__':

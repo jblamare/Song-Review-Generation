@@ -9,25 +9,25 @@ class NPY():
 
     def __init__(self):
         self.train_set = None
-        self.test_set = None
+        # self.test_set = None
 
-    @property
-    def train(self):
+    #@property
+    def train(self, first):
         if self.train_set is None:
-            features, labels = np.concatenate([load_features(DATA_FOLDER, 'magnatagatune_{}'.format(index + 1)) for index in range(number_sets)]), \
-                np.concatenate([load_labels(DATA_FOLDER, 'magnatagatune_{}'.format(index + 1))
-                                for index in range(number_sets)])
+            features, labels = np.concatenate([load_features(DATA_FOLDER, 'magnatagatune_{}'.format(index)) for index in range(first, first+number_sets)]), \
+                np.concatenate([load_labels(DATA_FOLDER, 'magnatagatune_{}'.format(index))
+                                for index in range(first, first+number_sets)])
             self.train_set = features, labels
             mean = np.mean(features, axis=0)
             var = np.var(features, axis=0)
             self.train_set = (features - mean) / np.sqrt(var), labels
         return self.train_set
 
-    @property
-    def test(self):
-        if self.test_set is None:
-            self.test_set = (np.load(os.path.join(DATA_FOLDER, ''), encoding='bytes'), None)
-        return self.test_set
+    # @property
+    # def test(self):
+    #     if self.test_set is None:
+    #         self.test_set = (np.load(os.path.join(DATA_FOLDER, ''), encoding='bytes'), None)
+    #     return self.test_set
 
 
 def load_features(path, name):
