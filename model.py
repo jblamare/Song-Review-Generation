@@ -54,8 +54,8 @@ class local_model(nn.Module):
             self.pool108 = nn.MaxPool1d(kernel_size=108)
         if self.segment_size == 216:
             self.pool2 = nn.MaxPool1d(kernel_size=2)
-            self.pool4 = nn.MaxPool1d(kernel_size=6)
-            self.pool8 = nn.MaxPool1d(kernel_size=12)
+            self.pool4 = nn.MaxPool1d(kernel_size=4)
+            self.pool8 = nn.MaxPool1d(kernel_size=8)
             self.pool24 = nn.MaxPool1d(kernel_size=24)
             self.pool72 = nn.MaxPool1d(kernel_size=72)
             self.pool216 = nn.MaxPool1d(kernel_size=216)
