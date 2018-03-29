@@ -128,17 +128,6 @@ def test(segment_size):
 
 
 if __name__ == '__main__':
-    # arg = sys.argv[1]
-    # segment_size = int(sys.argv[2])
-    # if arg == "train":
-    #     train(segment_size)
-    # if arg == "test":
-    #     test(segment_size)
-
-    train(54)
-    test(54)
-
-    # for seed in range(55, 100):
-    #     print("Seed =", seed)
-    #     train(27, seed)
-    #     test(27)
+    segment_size = int(sys.argv[1])
+    train(segment_size)
+    test(segment_size)

@@ -158,6 +158,8 @@ def test(segment_size_list):
 
 
 if __name__ == '__main__':
-    segment_size_list = [18, 27, 54]
+    segment_size_list = []
+    for i in range(1, len(sys.argv)):
+        segment_size_list.append(int(sys.argv[i]))
     train(segment_size_list)
     test(segment_size_list)

@@ -47,13 +47,15 @@ class local_model(nn.Module):
             self.pool18 = nn.MaxPool1d(kernel_size=18)
             self.pool54 = nn.MaxPool1d(kernel_size=54)
         if self.segment_size == 108:
-            self.pool6 = nn.MaxPool1d(kernel_size=6)
+            self.pool2 = nn.MaxPool1d(kernel_size=2)
+            self.pool4 = nn.MaxPool1d(kernel_size=4)
             self.pool12 = nn.MaxPool1d(kernel_size=12)
             self.pool36 = nn.MaxPool1d(kernel_size=36)
             self.pool108 = nn.MaxPool1d(kernel_size=108)
         if self.segment_size == 216:
-            self.pool6 = nn.MaxPool1d(kernel_size=6)
-            self.pool12 = nn.MaxPool1d(kernel_size=12)
+            self.pool2 = nn.MaxPool1d(kernel_size=2)
+            self.pool4 = nn.MaxPool1d(kernel_size=6)
+            self.pool8 = nn.MaxPool1d(kernel_size=12)
             self.pool24 = nn.MaxPool1d(kernel_size=24)
             self.pool72 = nn.MaxPool1d(kernel_size=72)
             self.pool216 = nn.MaxPool1d(kernel_size=216)
@@ -75,13 +77,13 @@ class local_model(nn.Module):
             X3 = self.conv3(X)  # BS*256*138 (3*46 // 6*23) // 132 (12*11) // 120 (24*5)
             X = self.pool3(F.relu(self.norm3(X3)))
             if self.segment_size >= 54:
-                X4 = self.conv4(X)  # BS*256*138 (3*23) // 66 (6*11) // 60 (12*5)
+                X4 = self.conv4(X)  # BS*256*46 (2*23) // 44 (4*11) // 40 (8*5)
                 X = self.pool2(F.relu(self.norm4(X4)))
                 if self.segment_size >= 108:
-                    X5 = self.conv5(X)  # BS*256*33 (3*11) // 30 (6*5)
+                    X5 = self.conv5(X)  # BS*256*22 (2*11) // 20 (4*5)
                     X = self.pool2(F.relu(self.norm5(X5)))
                     if self.segment_size == 216:
-                        X6 = self.conv6(X)  # BS*256*15 (3*5)
+                        X6 = self.conv6(X)  # BS*256*10 (2*5)
                         X = self.pool2(F.relu(self.norm6(X6)))
         X = self.avgpool(X).squeeze(2)
         X = F.relu(self.linearOut1(X))
@@ -105,15 +107,15 @@ class local_model(nn.Module):
             X1 = self.avgpool(self.pool108(X1)).squeeze(2)  # 64*128
             X2 = self.avgpool(self.pool36(X2)).squeeze(2)  # 64*128
             X3 = self.avgpool(self.pool12(X3)).squeeze(2)  # 64*256
-            X4 = self.avgpool(self.pool6(X4)).squeeze(2)  # 64*256
-            X5 = self.avgpool(self.pool3(X5)).squeeze(2)  # 64*256
+            X4 = self.avgpool(self.pool4(X4)).squeeze(2)  # 64*256
+            X5 = self.avgpool(self.pool2(X5)).squeeze(2)  # 64*256
         if self.segment_size == 216:
             X1 = self.avgpool(self.pool216(X1)).squeeze(2)  # 64*128
             X2 = self.avgpool(self.pool72(X2)).squeeze(2)  # 64*128
             X3 = self.avgpool(self.pool24(X3)).squeeze(2)  # 64*256
-            X4 = self.avgpool(self.pool12(X4)).squeeze(2)  # 64*256
-            X5 = self.avgpool(self.pool6(X5)).squeeze(2)  # 64*256
-            X6 = self.avgpool(self.pool3(X6)).squeeze(2)  # 64*256
+            X4 = self.avgpool(self.pool8(X4)).squeeze(2)  # 64*256
+            X5 = self.avgpool(self.pool4(X5)).squeeze(2)  # 64*256
+            X6 = self.avgpool(self.pool2(X6)).squeeze(2)  # 64*256
 
         if self.segment_size == 18:
             X_cat = torch.cat((X1, X2, X3), dim=1)  # 64*512
