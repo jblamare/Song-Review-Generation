@@ -79,7 +79,7 @@ def train(segment_size_list):
             for data, label in train_loader:
                 batch_number += 1
                 optimizer.zero_grad()
-                X = Variable(data[:, :, :1242]).cuda()
+                X = Variable(data).cuda()
                 X = torch.cat([loc_model(X)[1] for loc_model in local_models], dim=1)
                 Y = Variable(label).cuda().float()
                 out, _ = model(X)
@@ -143,7 +143,7 @@ def test(segment_size_list):
         print("Dataset loaded")
 
         for data, labels in test_loader:
-            X = Variable(data[:, :, :1242]).cuda()
+            X = Variable(data).cuda()
             X = torch.cat([loc_model(X)[1] for loc_model in local_models], dim=1)
             out, _ = model(X)
             auc_out = np.reshape(out.data.cpu().numpy(), -1)

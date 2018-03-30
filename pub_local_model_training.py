@@ -66,9 +66,9 @@ def train(segment_size):
             for data, label in train_loader:
                 batch_number += 1
                 optimizer.zero_grad()
-                n_frames = data.shape[2]
-                n_segments = n_frames // segment_size
-                X = Variable(data[:, :, :segment_size*n_segments]).cuda()
+                # n_frames = data.shape[2]
+                # n_segments = n_frames // segment_size
+                X = Variable(data).cuda()
                 Y = Variable(label).cuda().float()
                 out, _ = model(X)
                 pred = (out.data > 0.50).float()
@@ -112,9 +112,9 @@ def test(segment_size):
         print("Dataset loaded")
 
         for data, labels in test_loader:
-            n_frames = data.shape[2]
-            n_segments = n_frames // segment_size
-            X = Variable(data[:, :, :segment_size*n_segments]).cuda()
+            # n_frames = data.shape[2]
+            # n_segments = n_frames // segment_size
+            X = Variable(data).cuda()
             out, _ = model(X)
             auc_out = np.reshape(out.data.cpu().numpy(), -1)
             auc_target = np.reshape(labels, -1)
