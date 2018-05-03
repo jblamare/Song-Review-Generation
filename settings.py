@@ -23,6 +23,7 @@ MSD_SONGS_FOLDER = "/media/jblamare/My Passport/MusicDatasets/MSD/MillionSongDat
 MSD_MP3_FOLDER = "/media/jblamare/My Passport/MusicDatasets/MSD/songs/"
 MSD_NPY_FOLDER = "/media/jblamare/SAMSUNG/npy/"
 MSD_SPLIT_FOLDER = "/home/jblamare/Documents/CMU/11-747/Project/music_dataset_split/MSD_split/"
+MSD_CODE_FODER = "/media/jblamare/My Passport/MusicDatasets/MSD/MSongsDB"
 
 # data loading TVN
 
