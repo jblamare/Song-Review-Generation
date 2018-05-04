@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from generation_dataset import GenerationDataset, generation_collate
-from decoder import Decoder
+from merge_decoder import Decoder
 from settings import batch_size, MTAT_SPLIT_FOLDER, TVN_FOLDER, CLIP_INFO_FILE, MTAT_GENERATION_SPLIT, MTAT_NPY_FOLDER, \
     n_songs, normalization
 
@@ -63,7 +63,7 @@ def training_routine(num_epochs=7, batch_size=32, reg=0.00001, smoothing=0.2):
     valid_data = GenerationDataset(valid_features, valid_descriptions)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False, collate_fn=generation_collate)
 
-    decoder = Decoder(512, 128, 256, vocab_size, word_logprobs)
+    decoder = Decoder(512, 128, vocab_size, word_logprobs)
     decoder = decoder.cuda()
 
     # Loss and Optimizer
@@ -72,9 +72,13 @@ def training_routine(num_epochs=7, batch_size=32, reg=0.00001, smoothing=0.2):
 
     i = random.randint(0, len(train_data))
     j = random.randint(0, len(valid_data))
-    print(i, j)
+    k = random.randint(0, len(train_data))
+    l = random.randint(0, len(valid_data))
+    print(i, j, k, l)
     print(transcribe(train_descriptions[i], vocab))
     print(transcribe(valid_descriptions[j], valid_vocab))
+    print(transcribe(valid_descriptions[k], valid_vocab))
+    print(transcribe(valid_descriptions[l], valid_vocab))
 
     for epoch in range(num_epochs):
 
@@ -117,6 +121,8 @@ def training_routine(num_epochs=7, batch_size=32, reg=0.00001, smoothing=0.2):
 
         generate(train_data[i][0], vocab, decoder)
         generate(valid_data[j][0], vocab, decoder)
+        generate(train_data[k][0], vocab, decoder)
+        generate(valid_data[l][0], vocab, decoder)
 
         torch.save(decoder.state_dict(), 'decoder_' + str(epoch) + '.pt')
 
@@ -124,4 +130,4 @@ def training_routine(num_epochs=7, batch_size=32, reg=0.00001, smoothing=0.2):
 
 
 if __name__ == '__main__':
-    decoder = training_routine(num_epochs=20, batch_size=8, reg=0.00001, smoothing=1)
+    decoder = training_routine(num_epochs=20, batch_size=5, reg=0.00001, smoothing=1)
