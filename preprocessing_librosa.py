@@ -5,6 +5,9 @@ from multiprocessing.pool import Pool
 from time import time
 import pickle
 import librosa
+import sys
+import pandas
+import audioread
 
 # import librosa.display
 # librosa.display.specshow(librosa.amplitude_to_db(D, ref=np.max), y_axis='log', x_axis='time')
@@ -51,47 +54,86 @@ if __name__ == "__main__":
     id7d_to_path = pickle.load(open(os.path.join(MSD_SPLIT_FOLDER, '7D_id_to_path.pkl'), 'rb'))
     idmsd_to_id7d = pickle.load(open(os.path.join(MSD_SPLIT_FOLDER, 'MSD_id_to_7D_id.pkl'), 'rb'))
 
-    # i = 10000
-    # for song in train_list_pub[10000:]:
-    #     if i % 1000 == 0:
-    #         print(i)
-    #     mp3_path = id7d_to_path[idmsd_to_id7d[song]]
-    #     npy_path = 'training/'+mp3_path[:-9]+'.npy'
-    #     npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
-    #     os.makedirs(os.path.dirname(npy_path), exist_ok=True)
-    #     feats = extract_features(os.path.join(MSD_MP3_FOLDER, mp3_path))
-    #     np.save(npy_path, feats)
-    #     i += 1
+    if sys.argv[1] == 'train':
+        i = 10000
+        for song in train_list_pub[10000:]:
+            if i % 1000 == 0:
+                print(i)
+            mp3_path = id7d_to_path[idmsd_to_id7d[song]]
+            npy_path = 'training/'+mp3_path[:-9]+'.npy'
+            npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
+            try:
+                os.makedirs(os.path.dirname(npy_path), exist_ok=True)
+                feats = extract_features(os.path.join(MSD_MP3_FOLDER, mp3_path))
+                np.save(npy_path, feats)
+            except audioread.NoBackendError:
+                print("BackendError")
+            except KeyError:
+                print("KeyError")
+            i += 1
 
-    i = 0
-    for song in test_list_pub:
-        if i % 1000 == 0:
-            print(i)
-        mp3_path = id7d_to_path[idmsd_to_id7d[song]]
-        npy_path = 'testing/'+mp3_path[:-9]+'.npy'
-        npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
-        # if os.path.isfile(npy_path):
-        #     print(npy_path)
-        #     os.remove(npy_path)
-        os.makedirs(os.path.dirname(npy_path), exist_ok=True)
-        feats = extract_features(os.path.join(MSD_MP3_FOLDER, mp3_path))
-        np.save(npy_path, feats)
-        i += 1
+    if sys.argv[1] == 'test':
+        i = 0
+        for song in test_list_pub:
+            if i % 1000 == 0:
+                print(i)
+            try:
+                mp3_path = id7d_to_path[idmsd_to_id7d[song]]
+                npy_path = 'testing/'+mp3_path[:-9]+'.npy'
+                npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
+                # if os.path.isfile(npy_path):
+                #     print(npy_path)
+                #     os.remove(npy_path)
+                os.makedirs(os.path.dirname(npy_path), exist_ok=True)
+                feats = extract_features(os.path.join(MSD_MP3_FOLDER, mp3_path))
+                np.save(npy_path, feats)
+            except audioread.NoBackendError:
+                print("BackendError")
+            except KeyError:
+                print("KeyError")
+            i += 1
 
-    # i = 0
-    # for song in valid_list_pub:
-    #     if i % 1000 == 0:
-    #         print(i)
-    #     mp3_path = id7d_to_path[idmsd_to_id7d[song]]
-    #     npy_path = 'validation/'+mp3_path[:-9]+'.npy'
-    #     npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
-    #     # if os.path.isfile(npy_path):
-    #     #     print(npy_path)
-    #     #     os.remove(npy_path)
-    #     os.makedirs(os.path.dirname(npy_path), exist_ok=True)
-    #     feats = extract_features(os.path.join(MSD_MP3_FOLDER, mp3_path))
-    #     np.save(npy_path, feats)
-    #     i += 1
+    if sys.argv[1] == 'valid':
+        i = 0
+        for song in valid_list_pub:
+            if i % 1000 == 0:
+                print(i)
+            try:
+                mp3_path = id7d_to_path[idmsd_to_id7d[song]]
+                npy_path = 'validation/'+mp3_path[:-9]+'.npy'
+                npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
+                # if os.path.isfile(npy_path):
+                #     print(npy_path)
+                #     os.remove(npy_path)
+                os.makedirs(os.path.dirname(npy_path), exist_ok=True)
+                feats = extract_features(os.path.join(MSD_MP3_FOLDER, mp3_path))
+                np.save(npy_path, feats)
+            except audioread.NoBackendError:
+                print("BackendError")
+            except KeyError:
+                print("KeyError")
+            i += 1
+
+    if sys.argv[1] == 'pitchfork':
+        pairing = pandas.read_csv('pitchfork_msd_long.csv', sep=',', header=0).iloc[1000:]
+        for index, row in pairing.iterrows():
+            song = row['track_id']
+            if index % 1000 == 0:
+                print(index)
+            try:
+                mp3_path = id7d_to_path[idmsd_to_id7d[song]]
+                npy_path = 'pitchfork/'+mp3_path[:-9]+'.npy'
+                npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
+                # if os.path.isfile(npy_path):
+                #     print(npy_path)
+                #     os.remove(npy_path)
+                os.makedirs(os.path.dirname(npy_path), exist_ok=True)
+                feats = extract_features(os.path.join(MSD_MP3_FOLDER, mp3_path))
+                np.save(npy_path, feats)
+            except audioread.NoBackendError:
+                print("BackendError")
+            except KeyError:
+                print("KeyError")
 
 
 # if __name__ == '__main__':

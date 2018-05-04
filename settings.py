@@ -9,8 +9,8 @@ hop_length = 512
 window = "hann"
 C = 10
 
-train_dataset = 'MTAT'  # 'MSD'
-test_dataset = 'MTAT'  # 'MSD'
+train_dataset = 'MTAT'  # 'MSD'/'MTAT'
+test_dataset = 'MSD'  # 'MSD'/'MTAT'
 
 # data loading JB
 
@@ -24,6 +24,7 @@ MSD_MP3_FOLDER = "/media/jblamare/My Passport/MusicDatasets/MSD/songs/"
 MSD_NPY_FOLDER = "/media/jblamare/SAMSUNG/npy/"
 MSD_SPLIT_FOLDER = "/home/jblamare/Documents/CMU/11-747/Project/music_dataset_split/MSD_split/"
 MSD_CODE_FOLDER = "/media/jblamare/My Passport/MusicDatasets/MSD/MSongsDB"
+PITCHFORK_DATABASE = "/media/jblamare/My Passport/MusicDatasets/MSD/database.sqlite"
 
 # data loading TVN
 

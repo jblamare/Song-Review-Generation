@@ -23,7 +23,7 @@ def train(segment_size_list):
         id7d_to_path = pickle.load(open(os.path.join(MSD_SPLIT_FOLDER, '7D_id_to_path.pkl'), 'rb'))
         idmsd_to_id7d = pickle.load(
             open(os.path.join(MSD_SPLIT_FOLDER, 'MSD_id_to_7D_id.pkl'), 'rb'))
-        train_list_pub = pickle.load(
+        train_list_pub_id = pickle.load(
             open(os.path.join(MSD_SPLIT_FOLDER, 'filtered_list_train.cP'), 'rb'))
         train_list_pub = [id7d_to_path[idmsd_to_id7d[song]][:-9]+'.npy' for song in train_list_pub]
     total_train_size = len(train_list_pub)
@@ -71,11 +71,11 @@ def train(segment_size_list):
                 os.path.join(MTAT_SPLIT_FOLDER, 'y_train_pub.npy'))[[index[i] for i in range(start, min(start+n_songs, total_train_size))]]
         if train_dataset == 'MSD':
             train_features = np.concatenate(
-                [np.load(os.path.join(MSD_NPY_FOLDER, 'training/'+train_list_pub[i])) for i in range(start, min(start+n_songs, total_train_size))])
+                [np.expand_dims(np.load(os.path.join(MSD_NPY_FOLDER, 'testing/'+train_list_pub[i]))[:, :1255], axis=0) for i in range(start, min(start+n_songs, total_train_size))])
             idmsd_to_tag = pickle.load(
                 open(os.path.join(MSD_SPLIT_FOLDER, 'msd_id_to_tag_vector.cP'), 'rb'))
-            train_labels = np.concatenate(np.transpose(idmsd_to_tag[train_list_pub[index[i]]]) for i in range(
-                start, min(start+n_songs, total_train_size)))
+            train_labels = np.concatenate(
+                [idmsd_to_tag[idmsd] for idmsd in train_list_pub_id[start:min(start+n_songs, total_train_size)]], axis=1)
         if normalization:
             mean = np.mean(train_features, axis=0)
             var = np.var(train_features, axis=0)
@@ -117,17 +117,16 @@ def train(segment_size_list):
 
 
 def test(segment_size_list):
-    if train_dataset == 'MTAT':
+    if test_dataset == 'MTAT':
         test_list_pub = pickle.load(open(os.path.join(MTAT_SPLIT_FOLDER, 'test_list_pub.cP'), 'rb'))
-    if train_dataset == 'MSD':
+    if test_dataset == 'MSD':
         id7d_to_path = pickle.load(open(os.path.join(MSD_SPLIT_FOLDER, '7D_id_to_path.pkl'), 'rb'))
         idmsd_to_id7d = pickle.load(
             open(os.path.join(MSD_SPLIT_FOLDER, 'MSD_id_to_7D_id.pkl'), 'rb'))
-        idmsd_to_tag = pickle.load(
-            open(os.path.join(MSD_SPLIT_FOLDER, 'msd_id_to_tag_vector.cP'), 'rb'))
-        test_list_pub = pickle.load(
+        test_list_pub_id = pickle.load(
             open(os.path.join(MSD_SPLIT_FOLDER, 'filtered_list_test.cP'), 'rb'))
-        test_list_pub = [id7d_to_path[idmsd_to_id7d[song]][:-9]+'.npy' for song in test_list_pub]
+        test_list_pub = [id7d_to_path[idmsd_to_id7d[song]][:-9]+'.npy' for song in test_list_pub_id]
+        del id7d_to_path, idmsd_to_id7d
 
     total_test_size = len(test_list_pub)
 
@@ -164,9 +163,11 @@ def test(segment_size_list):
                 os.path.join(MTAT_SPLIT_FOLDER, 'y_test_pub.npy'))[start:min(start+n_songs, total_test_size)]
         if test_dataset == 'MSD':
             test_features = np.concatenate(
-                [np.load(os.path.join(MSD_NPY_FOLDER, 'testing/'+test_list_pub[i])) for i in range(start, min(start+n_songs, total_test_size))])
-            test_labels = np.concatenate(np.transpose(
-                idmsd_to_tag[test_list_pub[start:min(start+n_songs, total_test_size)]]))
+                [np.expand_dims(np.load(os.path.join(MSD_NPY_FOLDER, 'testing/'+test_list_pub[i]))[:, :1255], axis=0) for i in range(start, min(start+n_songs, total_test_size))])
+            idmsd_to_tag = pickle.load(
+                open(os.path.join(MSD_SPLIT_FOLDER, 'msd_id_to_tag_vector.cP'), 'rb'))
+            test_labels = np.concatenate(
+                [idmsd_to_tag[idmsd] for idmsd in test_list_pub_id[start:min(start+n_songs, total_test_size)]], axis=1)
 
         if normalization:
             mean = np.mean(test_features, axis=0)
