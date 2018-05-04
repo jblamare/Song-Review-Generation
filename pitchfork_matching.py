@@ -5,15 +5,9 @@ import time
 import datetime
 import pandas
 import pickle as cP
+from settings import MSD_MP3_FOLDER, MSD_SONGS_FOLDER, MSD_DATABASE_FOLDER, MSD_CODE_FOLDER, MSD_SPLIT_FOLDER
 
-msd_songs_path = "/media/jblamare/My Passport/MusicDatasets/MSD/songs/"
-msd_data_path = "/media/jblamare/My Passport/MusicDatasets/MSD/MillionSongDataset/"
-msd_db_path = "/media/jblamare/My Passport/MusicDatasets/MSD/MillionSongDataset/AdditionalFiles/"
-msd_code_path = "/media/jblamare/My Passport/MusicDatasets/MSD/MSongsDB/"
-
-split_path = "/home/jblamare/Documents/CMU/11-747/Project/music_dataset_split/MSD_split/"
-
-sys.path.append(os.path.join(msd_code_path, 'PythonSrc'))
+sys.path.append(os.path.join(MSD_CODE_FOLDER, 'PythonSrc'))
 
 pitchfork_db_path = "/media/jblamare/My Passport/MusicDatasets/MSD/database.sqlite"
 
@@ -47,7 +41,7 @@ def strtimedelta(starttime, stoptime):
     return str(datetime.timedelta(seconds=stoptime-starttime))
 
 
-conn_msd = sqlite3.connect(os.path.join(msd_db_path, 'track_metadata.db'))
+conn_msd = sqlite3.connect(os.path.join(MSD_DATABASE_FOLDER, 'track_metadata.db'))
 c_msd = conn_msd.cursor()
 conn_pf = sqlite3.connect(pitchfork_db_path)
 c_pf = conn_pf.cursor()
@@ -143,14 +137,17 @@ def check_pairing_reviews():
     # review = res_pf_review.fetchone()[0]
     # print(test)
     # print(review)
-    idmsd_to_tag = cP.load(open(split_path+'msd_id_to_tag_vector.cP', 'br'))
+    idmsd_to_tag = cP.load(open(MSD_SPLIT_FOLDER+'msd_id_to_tag_vector.cP', 'br'))
     alright = 0
+    indices = []
     for index, row in pairing.iterrows():
         try:
             tags = idmsd_to_tag[row['track_id']]
             alright += 1
+            indices.append(index)
         except KeyError:
             pass
+    pairing.iloc[indices].to_csv('pitchfork_msd_long.csv', index=False)
     print(alright)
 
 
