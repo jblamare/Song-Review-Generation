@@ -5,7 +5,7 @@ import time
 import datetime
 import pandas
 import pickle as cP
-from settings import MSD_MP3_FOLDER, MSD_SONGS_FOLDER, MSD_DATABASE_FOLDER, MSD_CODE_FOLDER, MSD_SPLIT_FOLDER, PITCHFORK_DATABASE
+from settings import MSD_MP3_FOLDER, MSD_SONGS_FOLDER, MSD_DATABASE_FOLDER, MSD_CODE_FOLDER, MSD_SPLIT_FOLDER, PITCHFORK_DB_PATH
 
 sys.path.append(os.path.join(MSD_CODE_FOLDER, 'PythonSrc'))
 
@@ -41,7 +41,7 @@ def strtimedelta(starttime, stoptime):
 
 conn_msd = sqlite3.connect(os.path.join(MSD_DATABASE_FOLDER, 'track_metadata.db'))
 c_msd = conn_msd.cursor()
-conn_pf = sqlite3.connect(PITCHFORK_DATABASE)
+conn_pf = sqlite3.connect(PITCHFORK_DB_PATH)
 c_pf = conn_pf.cursor()
 
 

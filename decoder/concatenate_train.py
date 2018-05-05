@@ -63,7 +63,7 @@ def training_routine(num_epochs=7, batch_size=32, reg=0.00001, smoothing=0.2):
     valid_data = GenerationDataset(valid_features, valid_descriptions)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False, collate_fn=generation_collate)
 
-    decoder = Decoder(512, 32, vocab_size, word_logprobs)
+    decoder = Decoder(512, 64, vocab_size, word_logprobs)
     decoder = decoder.cuda()
 
     # Loss and Optimizer
@@ -130,4 +130,4 @@ def training_routine(num_epochs=7, batch_size=32, reg=0.00001, smoothing=0.2):
 
 
 if __name__ == '__main__':
-    decoder = training_routine(num_epochs=20, batch_size=8, reg=0.00001, smoothing=1)
+    decoder = training_routine(num_epochs=20, batch_size=6, reg=0.00001, smoothing=1)

@@ -62,7 +62,7 @@ class Decoder(torch.nn.Module):
         hidden = self.activation(func.embedding(starter, self.linear.weight))
         features = features.unsqueeze(0).unsqueeze(1)
 
-        for _ in range(30):
+        for _ in range(40):
 
             for i, rnn in enumerate(self.rnns):
                 hidden, new_state = rnn(hidden, previous_states[i])
@@ -75,7 +75,7 @@ class Decoder(torch.nn.Module):
             predicted = outputs.max(1)[1]
             output_ids.append(predicted)
 
-            if int(predicted) == 1 or int(predicted) == 2:
+            if int(predicted) == 1 or int(predicted) == 2 and _ > 10:
                 break
 
             hidden = func.embedding(predicted, self.linear.weight)

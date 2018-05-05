@@ -24,7 +24,7 @@ MSD_MP3_FOLDER = "/media/jblamare/My Passport/MusicDatasets/MSD/songs/"
 MSD_NPY_FOLDER = "/media/jblamare/SAMSUNG/npy/"
 MSD_SPLIT_FOLDER = "/home/jblamare/Documents/CMU/11-747/Project/music_dataset_split/MSD_split/"
 MSD_CODE_FOLDER = "/media/jblamare/My Passport/MusicDatasets/MSD/MSongsDB"
-PITCHFORK_DATABASE = "/media/jblamare/My Passport/MusicDatasets/MSD/database.sqlite"
+PITCHFORK_DB_PATH = "/media/jblamare/My Passport/MusicDatasets/MSD/database.sqlite"
 
 # data loading TVN
 
@@ -38,6 +38,8 @@ PITCHFORK_DATABASE = "/media/jblamare/My Passport/MusicDatasets/MSD/database.sql
 # MSD_SONGS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/MillionSongDataset/"
 # MSD_SPLIT_FOLDER = TVN_FOLDER + "music_dataset_split/MSD_split/"
 # CLIP_INFO_FILE = TVN_FOLDER + "clip_info_final.csv"
+# REVIEWS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/Reviews/"
+# PITCHFORK_DB_PATH = TVN_FOLDER + "MusicDatasets/MSD/Reviews/database.sqlite"
 
 
 # DATA_FOLDER = os.path.join('../mp3/')

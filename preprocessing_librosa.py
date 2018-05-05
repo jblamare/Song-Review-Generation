@@ -55,8 +55,8 @@ if __name__ == "__main__":
     idmsd_to_id7d = pickle.load(open(os.path.join(MSD_SPLIT_FOLDER, 'MSD_id_to_7D_id.pkl'), 'rb'))
 
     if sys.argv[1] == 'train':
-        i = 10000
-        for song in train_list_pub[10000:]:
+        i = 68000
+        for song in train_list_pub[68000:]:
             if i % 1000 == 0:
                 print(i)
             mp3_path = id7d_to_path[idmsd_to_id7d[song]]
