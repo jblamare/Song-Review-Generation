@@ -63,7 +63,6 @@ class Firesuite(torch.nn.Module):
         N = features.shape[1]
         output = []
         ar = to_variable(torch.zeros(1), cuda=cuda)
-        tar = to_variable(torch.zeros(1), cuda=cuda)
 
         embedded = self.dropout(func.embedding(features, self.linear.weight))
         lstm_out = self.activation(embedded)
@@ -100,8 +99,6 @@ class Firesuite(torch.nn.Module):
 
                 for i, rnn in enumerate(self.rnns):
                     lstm_out, state = rnn(lstm_out, previous_states[i])
-                    if (i == len(self.rnns) - 1):
-                        tar += torch.sqrt(torch.pow(state[0] - previous_states[len(self.rnns) - 1][0], 2).sum())
                     previous_states[i] = state
                     lstm_out = self.locked_dropouts[i](lstm_out)
                 ar += torch.sqrt(torch.pow(lstm_out, 2).sum())
@@ -111,7 +108,7 @@ class Firesuite(torch.nn.Module):
                 new_input = torch.max(logits, dim=2)[1]
 
         logits = torch.cat(output, dim=0)
-        return logits, ar, tar
+        return logits, ar
 
     def set_cuda(self):
         print(torch.cuda.is_available())
@@ -199,7 +196,7 @@ def get_dataset(name):
 def get_next_stop(current_stop):
     jump = 8 + 8 * binomial(1, 0.95, 1)[0]
     jump = normal(jump, 5, 1)[0]
-    jump = min(30, jump)
+    jump = min(25, jump)
     next_stop = current_stop + jump
     next_stop = int(round(next_stop))
     if next_stop <= current_stop:
@@ -207,7 +204,7 @@ def get_next_stop(current_stop):
     return next_stop
 
 
-def training_routine(num_epochs=7, batch_size=12, reg=0.00001, smoothing=0.2, alpha=0.01, beta=0.01):
+def training_routine(num_epochs=7, batch_size=10, reg=0.00001, smoothing=0.2, alpha=0.01):
     train_data = get_dataset(os.path.join(REVIEWS_FOLDER, 'train_reviews.npy'))
     valid_data = get_dataset(os.path.join(REVIEWS_FOLDER, 'dev_reviews.npy'))
     vocab = json.load(open(os.path.join(REVIEWS_FOLDER, 'reverse_indexer.json')))
@@ -220,7 +217,7 @@ def training_routine(num_epochs=7, batch_size=12, reg=0.00001, smoothing=0.2, al
     word_probs = word_counts / float(total_count)
     word_logprobs = np.log((word_probs * (1. - smoothing)) + (smoothing / total_count))
 
-    data_loader = SequenceDataLoader(data=train_data, batch_size=batch_size, ratio=2)
+    data_loader = SequenceDataLoader(data=train_data, batch_size=batch_size)
     dev_loader = SequenceDataLoader(data=valid_data, batch_size=batch_size)
 
     firesuite = Firesuite(embedding_size=64, vocab_size=vocab_size, hidden_size=256, unigram_initialization=word_logprobs)
@@ -249,9 +246,9 @@ def training_routine(num_epochs=7, batch_size=12, reg=0.00001, smoothing=0.2, al
 
             total_sequences += data.shape[0]
             truth = truth.view(-1, )
-            output, ar, tar = firesuite(data)
+            output, ar = firesuite(data)
             output = output.view(-1, vocab_size)
-            loss = loss_fn(output, truth) + alpha * tar + beta * tar
+            loss = loss_fn(output, truth) + alpha * ar
             loss.backward()
             losses.append(loss.data.cpu().numpy())
             optim.step()
@@ -265,7 +262,7 @@ def training_routine(num_epochs=7, batch_size=12, reg=0.00001, smoothing=0.2, al
         for (data, truth) in dev_loader:
             total_sequences += data.shape[0]
             truth = truth.view(-1, )
-            output, ar, tar = firesuite(data)
+            output, ar = firesuite(data)
             output = output.view(-1, vocab_size)
             loss = loss_fn(output, truth)
             probs = logsoftmax(output.view(-1, vocab_size))

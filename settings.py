@@ -40,6 +40,7 @@ MSD_SPLIT_FOLDER = TVN_FOLDER + "music_dataset_split/MSD_split/"
 CLIP_INFO_FILE = TVN_FOLDER + "clip_info_final.csv"
 REVIEWS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/Reviews/"
 PITCHFORK_DB_PATH = TVN_FOLDER + "MusicDatasets/MSD/Reviews/database.sqlite"
+PITCHFORK_CSV_PATH = TVN_FOLDER + "MusicDatasets/MSD/Reviews/p4kreviews.csv"
 
 
 # DATA_FOLDER = os.path.join('../mp3/')
