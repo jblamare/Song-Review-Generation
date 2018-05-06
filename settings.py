@@ -41,7 +41,6 @@ PITCHFORK_DB_PATH = "/media/jblamare/My Passport/MusicDatasets/MSD/database.sqli
 # REVIEWS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/Reviews/"
 # PITCHFORK_DB_PATH = TVN_FOLDER + "MusicDatasets/MSD/Reviews/database.sqlite"
 
-
 # DATA_FOLDER = os.path.join('../mp3/')
 
 number_sets = 1
