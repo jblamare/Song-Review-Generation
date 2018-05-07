@@ -3,11 +3,14 @@ import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
 import os
+import json
 from LM_model import LanguageModel
 from LM_loader import MyLoader
-from LM_settings import embedding_dim, hidden_dim, epochs, REVIEWS_FOLDER
-import json
+from settings import REVIEWS_FOLDER
+from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs
+from LM_testing import generate_sample
 
+from time import time
 
 class Trainer():
     """
@@ -48,11 +51,19 @@ class Trainer():
     def run(self, epochs):
         print("Begin training...")
         train_loader = MyLoader(self.train_data)
+        step = 10000
+        print(len(train_loader))
+
         for e in range(epochs):
+
+            start_time = time()
             epoch_loss = 0
             batch_number = 0
             self.model.train()
-            for in_data, out_data in train_loader:
+            current_threshold = step
+
+
+            for i, (in_data, out_data) in enumerate(train_loader):
                 batch_number += 1
                 self.optimizer.zero_grad()
                 X = Variable(torch.from_numpy(in_data).long()).cuda()
@@ -64,8 +75,16 @@ class Trainer():
                 loss.backward()
                 self.optimizer.step()
                 epoch_loss += loss.data[0]
+
+                print(time() - start_time)
+
+                if i == current_threshold:
+                    print("{0} examples treated in {1:.4f}s".format(i, time() - start_time))
+                    current_threshold += step
+
             total_loss = epoch_loss/batch_number
-            print("Epoch: {0}, train_loss: {1:.8f}".format(e+1, total_loss))
+            print("Epoch: {0}, train_loss: {1:.8f}, time: {2:.4f}".format(e+1, total_loss, time() - start_time))
+            generate_sample(self.model, cuda=True)
             self.save_model('LanguageModel_'+str(e)+'.pt')
 
 
@@ -83,7 +102,7 @@ def train():
 
     # TRAIN MODELS
     vocab_size = len(indexer)
-    model = LanguageModel(vocab_size, embedding_dim, hidden_dim).cuda()
+    model = LanguageModel(vocab_size, embedding_dim, hidden_dim, music_dim).cuda()
     optimizer = torch.optim.Adam(model.parameters())
     trainer = Trainer(vocab_size, model, optimizer, reviews)
     model.apply(trainer.init_weight)

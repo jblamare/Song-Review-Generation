@@ -1,6 +1,8 @@
-batch_size = 8
-embedding_dim = 400
-hidden_dim = 1150
-epochs = 5
+batch_size = 1
+embedding_dim = 256
+hidden_dim = 1024
+music_dim = 512
+epochs = 10
 
-REVIEWS_FOLDER = "/media/jblamare/SAMSUNG/Pitchfork/npy/"
+
+# REVIEWS_FOLDER = ""

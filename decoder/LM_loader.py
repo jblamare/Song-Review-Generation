@@ -17,7 +17,7 @@ class MyLoader(DataLoader):
 
         shuffle(self.review_list)
         data = np.concatenate([review for review in self.review_list])
-        M = int(len(data)/batch_size)
+        M = int((len(data) - 1)/batch_size)
         data = data[:batch_size*M+1]
         inputs = data[:-1].reshape((batch_size, M)).T
         outputs = data[1:].reshape((batch_size, M)).T
@@ -28,3 +28,8 @@ class MyLoader(DataLoader):
             yield inputs[pos:pos+seq_length], outputs[pos:pos+seq_length]
             pos += seq_length
             seq_length = int(np.random.normal(loc=base_seq_length, scale=5))
+
+    def __len__(self):
+        data = np.concatenate([review for review in self.review_list])
+        M = int((len(data) - 1)/batch_size)
+        return M

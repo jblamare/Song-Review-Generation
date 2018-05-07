@@ -1,23 +1,25 @@
 import torch
 from torch.autograd import Variable
-from LM_model import LanguageModel
-from LM_settings import embedding_dim, hidden_dim, REVIEWS_FOLDER
 import numpy as np
 import os
 import json
 
-print('Loading datasets')
-train_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'train_reviews.npy'))
-test_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'test_reviews.npy'))
-dev_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'dev_reviews.npy'))
+from LM_model import LanguageModel
+from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs
+from settings import REVIEWS_FOLDER
+
+print('Loading indexer')
+# train_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'train_reviews.npy'))
+# test_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'test_reviews.npy'))
+# dev_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'dev_reviews.npy'))
 indexer = json.load(open(os.path.join(REVIEWS_FOLDER, 'indexer.json')))
 reverse_indexer = json.load(open(os.path.join(REVIEWS_FOLDER, 'reverse_indexer.json')))
-print('Datasets loaded')
+print('Indexers loaded')
 
-model = LanguageModel(len(indexer), embedding_dim, hidden_dim)
-model.load_state_dict(
-    torch.load('LanguageModel_1.pt', map_location=lambda storage, loc: storage))
-model.eval()
+# model = LanguageModel(len(indexer), embedding_dim, hidden_dim)
+# model.load_state_dict(
+#     torch.load('LanguageModel_1.pt', map_location=lambda storage, loc: storage))
+# model.eval()
 
 
 def sample_gumbel(shape, eps=1e-10, out=None):
@@ -31,18 +33,22 @@ def sample_gumbel(shape, eps=1e-10, out=None):
     return - torch.log(eps - torch.log(U + eps))
 
 
-def generation(inp, forward):
+def generation(model, text_features, forward, music_features=None, cuda=False):
     """
     Generate a sequence of words given a starting sequence.
     Load your model before generating words.
-    :param inp: Initial sequence of words (batch size, length)
+    :param text_features: Initial sequence of words (batch size, length)
     :param forward: number of additional words to generate
     :return: generated words (batch size, forward)
     """
-    X = torch.from_numpy(np.transpose(inp)).long()
+    X = torch.from_numpy(np.transpose(text_features)).long()
     for i in range(forward):
         X = Variable(X)
-        out = model(X)
+        if cuda:
+            X = X.cuda()
+            if music_features is not None:
+                music_features = music_features.cuda()
+        out = model(x=X, m=music_features)
         out = out[-1, :, :]
         # gumbel = Variable(sample_gumbel(shape=out.size(), out=out.data.new()))
         # out += gumbel
@@ -54,6 +60,16 @@ def generation(inp, forward):
             generated = torch.cat([generated, pred], dim=0)
         X = torch.cat([X.data, pred], dim=0)
     return torch.t(generated)
+
+
+def generate_sample(model, forward=30, cuda=False):
+    initialization = [0, 2]
+    initialization = np.expand_dims(np.array(initialization), axis=0)
+    if cuda:
+        generated = generation(model, initialization, forward, cuda=cuda).cpu().numpy()[0, :]
+    else:
+        generated = generation(model, initialization, forward, cuda=cuda).numpy()[0, :]
+    print(' '.join([reverse_indexer[i] for i in generated]))
 
 
 def test_generation():
@@ -73,7 +89,7 @@ def test_generation():
     print(' '.join([reverse_indexer[i] for i in generated]))
 
 
-def test_embedding():
+def test_embedding(model):
     embedding_weights = model.get_embedding()
     while(True):
         word1 = input("First word for similarity: ")
