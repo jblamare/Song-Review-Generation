@@ -33,7 +33,7 @@ class LanguageModel(nn.Module):
     def forward(self, x, m=None):
         # x = self.embeddings(x)
         if m is None:
-            m = Variable(torch.zeros(x.shape[0], x.shape[1], self.music_dim).cuda())
+            m = Variable(torch.zeros(x.shape[0], x.shape[1], self.music_dim).cuda(), requires_grad=False)
         x = F.embedding(x, self.linearOut.weight)
         x = self.dropout_wordvector(x)
         x, _ = self.lstm0(x)
@@ -41,9 +41,9 @@ class LanguageModel(nn.Module):
         x, _ = self.lstm1(x)
         x = self.dropout_lstm(x)
         x, _ = self.lstm2(x)
-        x = self.dropout_out(x)
         combined = torch.cat((x, m), dim=2)
         x, _ = self.lstm3(combined)
+        x = self.dropout_out(x)
         x = self.linearOut(x)
         return x
 
