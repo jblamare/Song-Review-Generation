@@ -1,12 +1,10 @@
 import torch
 from torch.autograd import Variable
 from LM_model import LanguageModel
-from LM_settings import embedding_dim, hidden_dim
+from LM_settings import embedding_dim, hidden_dim, REVIEWS_FOLDER
 import numpy as np
 import os
 import json
-
-REVIEWS_FOLDER = "/media/jblamare/SAMSUNG/Pitchfork/npy/"
 
 print('Loading datasets')
 train_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'train_reviews.npy'))
@@ -19,7 +17,6 @@ print('Datasets loaded')
 model = LanguageModel(len(indexer), embedding_dim, hidden_dim)
 model.load_state_dict(
     torch.load('LanguageModel_1.pt', map_location=lambda storage, loc: storage))
-# model.load_state_dict(torch.load('LanguageModel_0.pt'))
 model.eval()
 
 

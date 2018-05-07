@@ -9,8 +9,6 @@ class LanguageModel(nn.Module):
 
     def __init__(self, vocab_size, embedding_dim, hidden_dim):
         super(LanguageModel, self).__init__()
-        # self.embeddings = nn.Embedding(num_embeddings=vocab_size,
-        #                                embedding_dim=embedding_dim)
         self.dropout_wordvector = nn.Dropout(0.4)
         self.lstm0 = nn.LSTM(input_size=embedding_dim,
                              hidden_size=hidden_dim)
@@ -24,7 +22,6 @@ class LanguageModel(nn.Module):
                                    out_features=vocab_size)
 
     def forward(self, x):
-        # x = self.embeddings(x)
         x = F.embedding(x, self.linearOut.weight)
         x = self.dropout_wordvector(x)
         x, _ = self.lstm0(x)

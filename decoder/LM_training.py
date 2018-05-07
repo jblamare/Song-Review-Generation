@@ -5,11 +5,8 @@ from torch.autograd import Variable
 import os
 from LM_model import LanguageModel
 from LM_loader import MyLoader
-from LM_settings import embedding_dim, hidden_dim, epochs
-from nltk.tokenize import word_tokenize
+from LM_settings import embedding_dim, hidden_dim, epochs, REVIEWS_FOLDER
 import json
-
-REVIEWS_FOLDER = "/media/jblamare/SAMSUNG/Pitchfork/npy/"
 
 
 class Trainer():
@@ -70,10 +67,6 @@ class Trainer():
             total_loss = epoch_loss/batch_number
             print("Epoch: {0}, train_loss: {1:.8f}".format(e+1, total_loss))
             self.save_model('LanguageModel_'+str(e)+'.pt')
-
-
-def clean_description(text):
-    return ['<START_TOKEN>'] + [word.lower() for word in word_tokenize(text)] + ['<STOP_TOKEN>']
 
 
 def train():
