@@ -8,6 +8,7 @@ import librosa
 import sys
 import pandas
 import audioread
+import json
 
 # import librosa.display
 # librosa.display.specshow(librosa.amplitude_to_db(D, ref=np.max), y_axis='log', x_axis='time')
@@ -115,14 +116,16 @@ if __name__ == "__main__":
             i += 1
 
     if sys.argv[1] == 'pitchfork':
-        pairing = pandas.read_csv('pitchfork_msd_long.csv', sep=',', header=0).iloc[1000:]
-        for index, row in pairing.iterrows():
-            song = row['track_id']
+        pairs = json.load(open('pairs.json'))
+        # pairing = pandas.read_csv('pitchfork_msd_long.csv', sep=',', header=0).iloc[1000:]
+        index = 0
+        for track_id, _ in pairs.items():
             if index % 1000 == 0:
                 print(index)
+            index += 1
             try:
-                mp3_path = id7d_to_path[idmsd_to_id7d[song]]
-                npy_path = 'pitchfork/'+mp3_path[:-9]+'.npy'
+                mp3_path = id7d_to_path[idmsd_to_id7d[track_id]]
+                npy_path = 'new_pitchfork/'+mp3_path[:-9]+'.npy'
                 npy_path = os.path.join(MSD_NPY_FOLDER, npy_path)
                 # if os.path.isfile(npy_path):
                 #     print(npy_path)

@@ -5,7 +5,8 @@ import time
 import datetime
 import pandas
 import pickle as cP
-from settings import MSD_MP3_FOLDER, MSD_SONGS_FOLDER, MSD_DATABASE_FOLDER, MSD_CODE_FOLDER, MSD_SPLIT_FOLDER, PITCHFORK_DB_PATH
+from settings import MSD_MP3_FOLDER, MSD_SONGS_FOLDER, MSD_DATABASE_FOLDER, MSD_CODE_FOLDER, MSD_SPLIT_FOLDER, PITCHFORK_DB_PATH, PITCHFORK_CSV_PATH
+import json
 
 sys.path.append(os.path.join(MSD_CODE_FOLDER, 'PythonSrc'))
 
@@ -45,7 +46,7 @@ conn_pf = sqlite3.connect(PITCHFORK_DB_PATH)
 c_pf = conn_pf.cursor()
 
 
-def create_paring_from_msd():
+def create_pairing_from_msd():
     ######### 1) get pairs from MSD then check in PF #########
 
     # Retrieve all artist, album pairs from the MSD
@@ -126,6 +127,85 @@ def create_pairing_from_pf():
     print(n_reviews)
 
 
+def create_pairing_from_pf_new_pitchfork():
+
+    pitchfork = pandas.read_csv(open(PITCHFORK_CSV_PATH, encoding='cp1252'))
+
+    n_reviews = 0
+    n_matches = 0
+    f = open('pitchfork_msd.csv', 'w')
+    f.write('track_id,title,album,artist,review'+'\n')
+
+    for index, row in pitchfork.iterrows():
+        if n_reviews % 1000 == 0:
+            print(n_reviews)
+            print(n_matches)
+            print('-------')
+
+        pf_artist = str(row['artist'])
+        pf_album = str(row['album'])
+
+        q_msd_pairs = "SELECT track_id, title, release, artist_name FROM songs"
+        q_msd_pairs += " WHERE release="+encode_string(pf_album)
+        q_msd_pairs += " AND artist_name="+encode_string(pf_artist)
+        res_msd_pairs = conn_msd.execute(q_msd_pairs)
+        songs = res_msd_pairs.fetchall()
+
+        if len(songs) > 0:
+            n_matches += 1
+            for track_id, title, _, _ in songs:
+                f.write(str(track_id)+','+title+','+pf_album+','+pf_artist+','+row['review']+'\n')
+
+        n_reviews += 1
+
+    f.close()
+    print(n_reviews)
+    print(n_matches)
+
+
+def create_pairing_from_msd_new_pitchfork():
+    ######### 1) get pairs from MSD then check in PF #########
+
+    print("RAS")
+
+    # Retrieve all artist, album pairs from the MSD
+    q_msd_pairs = "SELECT track_id, title, release, artist_name FROM songs GROUP BY release, artist_name"
+    res_msd_pairs = conn_msd.execute(q_msd_pairs)
+    pairs_msd = res_msd_pairs.fetchall()
+
+    pitchfork = json.load(open('review_dictionary.json'))
+    idmsd_to_tag = cP.load(open(MSD_SPLIT_FOLDER+'msd_id_to_tag_vector.cP', 'br'))
+
+    n_reviews = 0
+    n_matches = 0
+
+    pairs = dict()
+    for track_id, title, release, artist in pairs_msd:
+        if n_reviews % 1000 == 0:
+            print(n_reviews)
+            print(n_matches)
+            print('-------')
+
+        n_reviews += 1
+
+        try:
+            review = pitchfork[artist.lower()][release.lower()]
+            tags = idmsd_to_tag[track_id]
+            n_matches += 1
+            pair = dict()
+            pair['title'] = title
+            pair['album'] = release
+            pair['artist'] = artist
+            pair['review'] = review
+            pairs[track_id] = pair
+        except KeyError:
+            continue
+
+    json.dump(pairs, open('pairs.json', 'w'))
+    print(n_reviews)
+    print(n_matches)
+
+
 def check_pairing_reviews():
     pairing = pandas.read_csv('pitchfork_msd.csv', sep=',', header=0)
     # test = pairing.iloc[1]
@@ -151,7 +231,8 @@ def check_pairing_reviews():
 
 # create_pairing_from_msd()
 # create_pairing_from_pf()
-check_pairing_reviews()
+create_pairing_from_msd_new_pitchfork()
+# check_pairing_reviews()
 
 conn_msd.close()
 conn_pf.close()

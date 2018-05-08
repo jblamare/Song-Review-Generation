@@ -12,7 +12,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from generation_dataset import GenerationDataset, generation_collate
 from merge_decoder import Decoder
-from settings import batch_size, MTAT_SPLIT_FOLDER, TVN_FOLDER, CLIP_INFO_FILE, MTAT_GENERATION_SPLIT, MTAT_NPY_FOLDER, \
+from settings import batch_size, MTAT_SPLIT_FOLDER, AWS_FOLDER, CLIP_INFO_FILE, MTAT_GENERATION_SPLIT, MTAT_NPY_FOLDER, \
     n_songs, normalization
 
 

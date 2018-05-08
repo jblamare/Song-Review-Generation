@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.dataloader import _use_shared_memory
 
 from settings import REVIEWS_FOLDER
+from review_extractor import indexes_to_characters
 
 
 class Firesuite(torch.nn.Module):
@@ -98,9 +99,15 @@ class Firesuite(torch.nn.Module):
                 lstm_out = self.activation(x)
 
                 for i, rnn in enumerate(self.rnns):
-                    lstm_out, state = rnn(lstm_out, previous_states[i])
-                    previous_states[i] = state
-                    lstm_out = self.locked_dropouts[i](lstm_out)
+                    if i < 2:
+                        lstm_out, state = rnn(lstm_out, previous_states[i])
+                        previous_states[i] = state
+                    else:
+                        zeros = to_variable(torch.zeros(lstm_out.shape[0], lstm_out.shape[1], self.music_features_size))
+                        lstm_out = torch.cat((lstm_out, zeros), dim=2)
+                        lstm_out, state = rnn(lstm_out, previous_states[i])
+                        previous_states[i] = state
+
                 ar += torch.sqrt(torch.pow(lstm_out, 2).sum())
                 logits = self.linear(lstm_out)
 
@@ -204,6 +211,15 @@ def get_next_stop(current_stop):
     return next_stop
 
 
+def generation(inp, forward, lm):
+    inp = torch.from_numpy(inp.transpose()).long()
+    if len(inp.shape) == 1:
+        inp = inp.unsqueeze(1)
+    pred = lm.forward(to_variable(inp, cuda=True), generate=forward, cuda=True)[
+        0].transpose(0, 1)
+    return pred.data.cpu().numpy()[:, :, :].argmax(axis=2)
+
+
 def training_routine(num_epochs=7, batch_size=10, reg=0.00001, smoothing=0.2, alpha=0.01):
     train_data = get_dataset(os.path.join(REVIEWS_FOLDER, 'train_reviews.npy'))
     valid_data = get_dataset(os.path.join(REVIEWS_FOLDER, 'dev_reviews.npy'))
@@ -212,7 +228,6 @@ def training_routine(num_epochs=7, batch_size=10, reg=0.00001, smoothing=0.2, al
     vocab_size = len(vocab)
     word_counts = Counter(train_data)
     word_counts = np.array([word_counts[i] for i in range(vocab_size)], dtype=np.float32)
-    word_counts[0] = 0
     total_count = sum(word_counts)
     word_probs = word_counts / float(total_count)
     word_logprobs = np.log((word_probs * (1. - smoothing)) + (smoothing / total_count))
@@ -238,7 +253,7 @@ def training_routine(num_epochs=7, batch_size=10, reg=0.00001, smoothing=0.2, al
         valid_losses = []
         firesuite.train()
         total_sequences = 0
-        step = 100000
+        step = 10000
         current_threshold = step
         word_count = 0
 
@@ -255,6 +270,8 @@ def training_routine(num_epochs=7, batch_size=10, reg=0.00001, smoothing=0.2, al
             optim.zero_grad()
             if total_sequences > current_threshold:
                 print('did {} out of {} in {}'.format(total_sequences, len(data_loader), time() - start))
+                inp = valid_data[:10]
+                print(indexes_to_characters(generation(inp, 30, firesuite)[0], vocab))
                 current_threshold += step
 
         firesuite.eval()

@@ -13,7 +13,7 @@ from mosestokenizer import MosesTokenizer, MosesSentenceSplitter
 from nltk.tokenize import sent_tokenize, word_tokenize
 
 from pub_custom_dataset import CustomDataset
-from settings import batch_size, MTAT_SPLIT_FOLDER, TVN_FOLDER, CLIP_INFO_FILE, MTAT_GENERATION_SPLIT, MTAT_NPY_FOLDER, \
+from settings import batch_size, MTAT_SPLIT_FOLDER, AWS_FOLDER, CLIP_INFO_FILE, MTAT_GENERATION_SPLIT, MTAT_NPY_FOLDER, \
     n_songs, normalization
 
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load('global_model_18_27_54_9051_123.pt'))
 
     db = pd.read_csv(CLIP_INFO_FILE, sep="\t")
-    description_dict = json.load(open(os.path.join(TVN_FOLDER, 'descriptions.json')))
+    description_dict = json.load(open(os.path.join(AWS_FOLDER, 'descriptions.json')))
 
     for name in ['train', 'test', 'valid']:
         handle_set(name, output=True)

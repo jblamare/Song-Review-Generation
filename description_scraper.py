@@ -5,7 +5,7 @@ from time import time, sleep
 import os
 import json
 
-from settings import TVN_FOLDER, CLIP_INFO_FILE
+from settings import AWS_FOLDER, CLIP_INFO_FILE
 
 
 def is_description_tag(tag):
@@ -53,4 +53,4 @@ if __name__ == '__main__':
     print(time() - start)
     print(gotten)
     print(len(urls))
-    json.dump(url_to_desc, open(os.path.join(TVN_FOLDER, 'descriptions.json'), 'w'), ensure_ascii=False, indent=2)
+    json.dump(url_to_desc, open(os.path.join(AWS_FOLDER, 'descriptions.json'), 'w'), ensure_ascii=False, indent=2)
