@@ -5,6 +5,7 @@ from unicodedata import normalize
 import random
 from settings import PITCHFORK_CSV_PATH, REVIEWS_FOLDER
 from nltk.tokenize import sent_tokenize, word_tokenize
+from review_extractor import clean_review
 import pandas as pd
 import numpy as np
 import json
@@ -23,27 +24,6 @@ def index_word(word, indexer, reverse_indexer):
         indexer[word] = new_index
         reverse_indexer.append(word)
         return new_index
-
-
-def clean_review(text):
-    text = normalize('NFKD', text)
-    text = re.sub("-", " - ", text)
-    text = re.sub("—", " — ", text)
-    text = re.sub("/", " / ", text)
-    text = re.sub("\s\s+", " ", text)
-    text = re.sub('^Best new [A-Za-z]*', "", text)
-    text = text.strip()
-    text = re.sub('^[0-9] \/ [0-9] [Aa]lbums', "", text)
-    text = text.strip()
-    # text = text.replace("\\n\\", "\n")
-    start_dot_matches = re.finditer("\.\.\.", text)
-    for start_dots in start_dot_matches:
-        if start_dots is not None:
-            if text[start_dots.start() + 4:start_dots.start() + 14] == text[:10]:
-                text = text[start_dots.start() + 4:]
-    sentences = [sentence for sentence in sent_tokenize(text)]
-    sentences = [word_tokenize(sentence) for sentence in sentences]
-    return [word.lower() for sentence in sentences for word in sentence]
 
 
 def indexes_to_characters(transcript, dictionary):
@@ -66,15 +46,15 @@ if __name__ == '__main__':
         review = row[1]['review']
 
     for i, row in enumerate(df.iterrows()):
-        artist = row[1]['artist']
-        album = row[1]['album']
+        artist = str(row[1]['artist']).lower()
+        album = str(row[1]['album']).lower()
         review = row[1]['review']
 
         if isinstance(review, str) and '*' not in review:
             try:
                 review_dictionary[artist][album] = index_transcript(clean_review(review), indexer, reverse_indexer)
             except KeyError:
-                review_dictionary[artist] = {'album': index_transcript(clean_review(review), indexer, reverse_indexer)}
+                review_dictionary[artist] = {album: index_transcript(clean_review(review), indexer, reverse_indexer)}
 
         print(i)
 
