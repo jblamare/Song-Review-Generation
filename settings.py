@@ -28,20 +28,37 @@ PITCHFORK_DB_PATH = "/media/jblamare/My Passport/MusicDatasets/MSD/database.sqli
 PITCHFORK_CSV_PATH = "/media/jblamare/SAMSUNG/Pitchfork/p4kreviews.csv"
 REVIEWS_FOLDER = "/media/jblamare/SAMSUNG/Pitchfork/npy/"
 
+
 # data loading TVN
 
-# TVN_FOLDER = "/home/teven/Projet747/"
-# DATA_FOLDER = TVN_FOLDER + "Full dataset/"
-# MTAT_MP3_FOLDER = TVN_FOLDER + "MusicDatasets/MTAT/mp3/"
-# MTAT_NPY_FOLDER = TVN_FOLDER + "MusicDatasets/MTAT/npy/"
-# MTAT_SPLIT_FOLDER = TVN_FOLDER + "music_dataset_split/MTAT_split/"
-# MTAT_GENERATION_SPLIT = TVN_FOLDER + 'music_dataset_split/MTAT_generation_split'
-# MSD_DATABASE_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/MillionSongDataset/AdditionalFiles/"
-# MSD_SONGS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/MillionSongDataset/"
-# MSD_SPLIT_FOLDER = TVN_FOLDER + "music_dataset_split/MSD_split/"
-# CLIP_INFO_FILE = TVN_FOLDER + "clip_info_final.csv"
-# REVIEWS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/Reviews/"
-# PITCHFORK_DB_PATH = TVN_FOLDER + "MusicDatasets/MSD/Reviews/database.sqlite"
+TVN_FOLDER = "/home/teven/Projet747/"
+DATA_FOLDER = TVN_FOLDER + "Full dataset/"
+MTAT_MP3_FOLDER = TVN_FOLDER + "MusicDatasets/MTAT/mp3/"
+MTAT_NPY_FOLDER = TVN_FOLDER + "MusicDatasets/MTAT/npy/"
+MTAT_SPLIT_FOLDER = TVN_FOLDER + "music_dataset_split/MTAT_split/"
+MTAT_GENERATION_SPLIT = TVN_FOLDER + 'music_dataset_split/MTAT_generation_split'
+MSD_DATABASE_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/MillionSongDataset/AdditionalFiles/"
+MSD_SONGS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/MillionSongDataset/"
+MSD_SPLIT_FOLDER = TVN_FOLDER + "music_dataset_split/MSD_split/"
+CLIP_INFO_FILE = TVN_FOLDER + "clip_info_final.csv"
+REVIEWS_FOLDER = TVN_FOLDER + "MusicDatasets/MSD/Reviews/"
+PITCHFORK_DB_PATH = TVN_FOLDER + "MusicDatasets/MSD/Reviews/database.sqlite"
+PITCHFORK_CSV_PATH = TVN_FOLDER + "MusicDatasets/MSD/Reviews/p4kreviews.csv"
+
+# data loading AWS
+
+# AWS_FOLDER = "/home/ubuntu/Projet747/"
+# DATA_FOLDER = AWS_FOLDER + "Full dataset/"
+# MTAT_MP3_FOLDER = AWS_FOLDER + "MusicDatasets/MTAT/mp3/"
+# MTAT_NPY_FOLDER = AWS_FOLDER + "MusicDatasets/MTAT/npy/"
+# MTAT_SPLIT_FOLDER = AWS_FOLDER + "music_dataset_split/MTAT_split/"
+# MTAT_GENERATION_SPLIT = AWS_FOLDER + 'music_dataset_split/MTAT_generation_split'
+# MSD_DATABASE_FOLDER = AWS_FOLDER + "MusicDatasets/MSD/MillionSongDataset/AdditionalFiles/"
+# MSD_SONGS_FOLDER = AWS_FOLDER + "MusicDatasets/MSD/MillionSongDataset/"
+# MSD_SPLIT_FOLDER = AWS_FOLDER + "music_dataset_split/MSD_split/"
+# CLIP_INFO_FILE = AWS_FOLDER + "clip_info_final.csv"
+# REVIEWS_FOLDER = AWS_FOLDER + "MusicDatasets/MSD/Reviews/"
+# PITCHFORK_DB_PATH = AWS_FOLDER + "MusicDatasets/MSD/Reviews/database.sqlite"
 
 # data loading AWS
 

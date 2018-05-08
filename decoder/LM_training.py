@@ -17,6 +17,8 @@ import sqlite3
 
 from time import time
 
+from time import time
+
 
 class Trainer():
     """

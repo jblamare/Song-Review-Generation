@@ -10,6 +10,7 @@ from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs
 from settings import REVIEWS_FOLDER, MSD_NPY_FOLDER, MSD_SPLIT_FOLDER
 from model import local_model, global_model
 
+
 print('Loading indexer')
 # train_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'train_reviews.npy'))
 # test_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'test_reviews.npy'))
