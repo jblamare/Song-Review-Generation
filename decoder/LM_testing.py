@@ -10,6 +10,18 @@ from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs
 from settings import REVIEWS_FOLDER, MSD_NPY_FOLDER, MSD_SPLIT_FOLDER
 from model import local_model, global_model
 
+import torch._utils
+try:
+    torch._utils._rebuild_tensor_v2
+except AttributeError:
+    def _rebuild_tensor_v2(storage, storage_offset, size, stride, requires_grad, backward_hooks):
+        tensor = torch._utils._rebuild_tensor(storage, storage_offset, size, stride)
+        tensor.requires_grad = requires_grad
+        tensor._backward_hooks = backward_hooks
+        return tensor
+    torch._utils._rebuild_tensor_v2 = _rebuild_tensor_v2
+
+
 
 print('Loading indexer')
 # train_reviews = np.load(os.path.join(REVIEWS_FOLDER, 'train_reviews.npy'))
@@ -35,41 +47,7 @@ def sample_gumbel(shape, eps=1e-10, out=None):
     return - torch.log(eps - torch.log(U + eps))
 
 
-def generation(model, text_features, forward, with_gumbel, music_features=None, cuda=False):
-    """
-    Generate a sequence of words given a starting sequence.
-    Load your model before generating words.
-    :param text_features: Initial sequence of words (batch size, length)
-    :param forward: number of additional words to generate
-    :return: generated words (batch size, forward)
-    """
-    X = torch.from_numpy(np.transpose(text_features)).long()
-    for i in range(forward):
-        X = Variable(X)
-        if cuda:
-            X = X.cuda()
-            if music_features is not None:
-                music_features = music_features.cuda()
-
-        if music_features is not None:
-            expanded_music = music_features.unsqueeze(1).expand(
-                X.shape[0], X.shape[1], -1).contiguous()
-        out = model(x=X, m=expanded_music)
-        out = out[-1, :, :]
-        if with_gumbel:
-            gumbel = Variable(sample_gumbel(shape=out.size(), out=out.data.new()))
-            out += gumbel
-        pred = out.data.max(1, keepdim=True)[1]
-        pred = torch.t(pred)
-        if i == 0:
-            generated = pred
-        else:
-            generated = torch.cat([generated, pred], dim=0)
-        X = torch.cat([X.data, pred], dim=0)
-    return torch.t(generated)
-
-
-def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False):
+def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False, gumbel_weight=1.0):
     pairs = json.load(open('pairs.json'))
     song_number = 0
 
@@ -91,7 +69,7 @@ def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False):
 
     for track_id, value in pairs.items():
         song_number += 1
-        if song_number >= 50:
+        if song_number >= 6:
             break
         else:
             try:
@@ -102,6 +80,7 @@ def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False):
                 print("No key?")
                 continue
             except FileNotFoundError:
+                print(npy_path)
                 print("No audio?")
                 continue
 
@@ -119,12 +98,13 @@ def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False):
 
             initialization = [0]
             initialization = np.expand_dims(np.array(initialization), axis=0)
+            initialization = Variable(torch.from_numpy(np.transpose(initialization)).long())
             if cuda:
-                generated = generation(language_model, initialization, forward,
-                                       music_features=music, cuda=cuda, with_gumbel=with_gumbel).cpu().numpy()[0, :]
+                generated = torch.max(language_model.generate(initialization.cuda(), forward,
+                                       m=music, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight), dim=2)[1].cpu().data.numpy()[0, :]
             else:
-                generated = generation(language_model, initialization, forward,
-                                       music_features=music, cuda=cuda, with_gumbel=with_gumbel).numpy()[0, :]
+                generated = torch.max(language_model.generate(initialization, forward,
+                                       m=music, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight), dim=2)[1].data.numpy()[0, :]
             print('----------------')
             print(value['title'])
             print(value['album'])
@@ -133,7 +113,7 @@ def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False):
             print(' '.join([reverse_indexer[i] for i in generated]))
 
 
-def test_generation():
+def explore_generation():
     initialization = []
     while(True):
         word = input("next word: ")
@@ -150,7 +130,7 @@ def test_generation():
     print(' '.join([reverse_indexer[i] for i in generated]))
 
 
-def test_embedding(model):
+def explore_embeddings(model):
     embedding_weights = model.get_embedding()
     while(True):
         word1 = input("First word for similarity: ")
@@ -190,6 +170,6 @@ if __name__ == "__main__":
     language_model.load_state_dict(
         torch.load('LanguageModel_audio_4.pt'))  # , map_location=lambda storage, loc: storage))
     language_model.eval()
-    # test_embedding(language_model)
-    # test_generation()
-    generate_sample(language_model, cuda=True, with_gumbel=True)
+    # explore_embeddings(language_model)
+    # explore_generation()
+    generate_sample(language_model, cuda=True, with_gumbel=True, gumbel_weight=0.7)
