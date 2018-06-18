@@ -7,7 +7,8 @@ from model import local_model
 from pub_custom_dataset import CustomDataset
 from torchnet.meter import AUCMeter
 import matplotlib.pyplot as plt
-from settings import number_labels, batch_size, epochs, learning_rate, momentum, MTAT_MP3_FOLDER, MTAT_NPY_FOLDER, MTAT_SPLIT_FOLDER, n_songs, normalization, seed
+from settings import number_labels, batch_size, epochs, learning_rate, momentum, MTAT_MP3_FOLDER, MTAT_NPY_FOLDER, \
+    MTAT_SPLIT_FOLDER, ENCODER_FOLDER, n_songs, normalization, seed
 from preprocessing_librosa import extract_features
 import os
 import pickle
@@ -44,9 +45,11 @@ def train(segment_size):
     for start in range(0, total_train_size, n_songs):
         print("Loading datasets...", start)
         train_features = np.concatenate(
-            [np.load(os.path.join(MTAT_NPY_FOLDER, 'training/'+train_list_pub[i])) for i in range(start, min(start+n_songs, total_train_size))])
+            [np.load(os.path.join(MTAT_NPY_FOLDER, 'training/' + train_list_pub[i])) for i in
+             range(start, min(start + n_songs, total_train_size))])
         train_labels = np.load(
-            os.path.join(MTAT_SPLIT_FOLDER, 'y_train_pub.npy'))[[index[i] for i in range(start, min(start+n_songs, total_train_size))]]
+            os.path.join(MTAT_SPLIT_FOLDER, 'y_train_pub.npy'))[
+            [index[i] for i in range(start, min(start + n_songs, total_train_size))]]
         if normalization:
             mean = np.mean(train_features, axis=0)
             var = np.var(train_features, axis=0)
@@ -76,12 +79,12 @@ def train(segment_size):
                 loss.backward()
                 optimizer.step()
                 epoch_loss += loss.data[0]
-            total_loss = epoch_loss/batch_number
-            train_accuracy = correct/(train_size*number_labels)
+            total_loss = epoch_loss / batch_number
+            train_accuracy = correct / (train_size * number_labels)
             # print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
             # print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
 
-    torch.save(model.state_dict(), 'local_model_'+str(segment_size)+'.pt')
+    torch.save(model.state_dict(), os.path.join(ENCODER_FOLDER, 'local_model_' + str(segment_size) + '.pt'))
     print("Finished training")
 
 
@@ -90,16 +93,17 @@ def test(segment_size):
     total_test_size = len(test_list_pub)
 
     model = local_model(segment_size).cuda()
-    model.load_state_dict(torch.load('local_model_'+str(segment_size)+'.pt'))
+    model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'local_model_' + str(segment_size) + '.pt')))
     model.eval()
     auc = AUCMeter()
 
     for start in range(0, total_test_size, n_songs):
         print("Loading dataset...", start)
         test_features = np.concatenate(
-            [np.load(os.path.join(MTAT_NPY_FOLDER, 'testing/'+test_list_pub[i])) for i in range(start, min(start+n_songs, total_test_size))])
+            [np.load(os.path.join(MTAT_NPY_FOLDER, 'testing/' + test_list_pub[i])) for i in
+             range(start, min(start + n_songs, total_test_size))])
         test_labels = np.load(
-            os.path.join(MTAT_SPLIT_FOLDER, 'y_test_pub.npy'))[start:min(start+n_songs, total_test_size)]
+            os.path.join(MTAT_SPLIT_FOLDER, 'y_test_pub.npy'))[start:min(start + n_songs, total_test_size)]
         if normalization:
             mean = np.mean(test_features, axis=0)
             var = np.var(test_features, axis=0)

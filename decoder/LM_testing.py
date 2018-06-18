@@ -7,7 +7,7 @@ import pickle
 
 from LM_model import LanguageModel
 from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs, music_dim
-from settings import REVIEWS_FOLDER, MSD_NPY_FOLDER, MSD_SPLIT_FOLDER
+from settings import REVIEWS_FOLDER, MSD_NPY_FOLDER, MSD_SPLIT_FOLDER, DECODER_FOLDER, ENCODER_FOLDER
 from model import local_model, global_model
 
 import torch._utils
@@ -47,8 +47,8 @@ def sample_gumbel(shape, eps=1e-10, out=None):
     return - torch.log(eps - torch.log(U + eps))
 
 
-def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False, gumbel_weight=1.0):
-    pairs = json.load(open('pairs.json'))
+def generate_sample(language_model, forward=100, width=15, cuda=False, with_gumbel=False, gumbel_weight=1.0):
+    pairs = json.load(open(os.path.join(MSD_SPLIT_FOLDER, 'pairs.json')))
     song_number = 0
 
     n_inputs = 512+512+768
@@ -58,13 +58,13 @@ def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False, 
         loc_model = local_model(segment_size)
         if cuda:
             loc_model = loc_model.cuda()
-        loc_model.load_state_dict(torch.load('local_model_'+str(segment_size)+'.pt'))
+        loc_model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'local_model_'+str(segment_size)+'.pt')))
         loc_model.eval()
         local_models.append(loc_model)
     model = global_model(n_inputs, 512)
     if cuda:
         model = model.cuda()
-    model.load_state_dict(torch.load('global_model_18_27_54_9051_123.pt'))
+    model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'global_model_18_27_54_9051_123.pt')))
     model.eval()
 
     for track_id, value in pairs.items():
@@ -78,7 +78,13 @@ def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False, 
                 X = np.load(npy_path)
             except KeyError:
                 print("No key?")
-                continue
+                try:
+                    if track_id == 'AROBTTH':
+                        npy_path = os.path.join(MSD_NPY_FOLDER, '2975.npy')
+                        X = np.load(npy_path)
+                except:
+                    print('A rush of blood to the head not found')
+                    continue
             except FileNotFoundError:
                 print(npy_path)
                 print("No audio?")
@@ -100,8 +106,10 @@ def generate_sample(language_model, forward=100, cuda=False, with_gumbel=False, 
             initialization = np.expand_dims(np.array(initialization), axis=0)
             initialization = Variable(torch.from_numpy(np.transpose(initialization)).long())
             if cuda:
-                generated = torch.max(language_model.generate(initialization.cuda(), forward,
-                                       m=music, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight), dim=2)[1].cpu().data.numpy()[0, :]
+                # generated = torch.max(language_model.generate(initialization.cuda(), forward,
+                #                        m=music, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight), dim=2)[1].cpu().data.numpy()[0, :]
+                generated = language_model.random_search(initialization.cuda(), forward, width=width,
+                                       m=music, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight).cpu().data.numpy()
             else:
                 generated = torch.max(language_model.generate(initialization, forward,
                                        m=music, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight), dim=2)[1].data.numpy()[0, :]
@@ -168,8 +176,8 @@ def explore_embeddings(model):
 if __name__ == "__main__":
     language_model = LanguageModel(vocab_size, embedding_dim, hidden_dim, music_dim).cuda()
     language_model.load_state_dict(
-        torch.load('LanguageModel_audio_4.pt'))  # , map_location=lambda storage, loc: storage))
+        torch.load(os.path.join(DECODER_FOLDER, 'LanguageModel_audio_4.pt')))  # , map_location=lambda storage, loc: storage))
     language_model.eval()
     # explore_embeddings(language_model)
     # explore_generation()
-    generate_sample(language_model, cuda=True, with_gumbel=True, gumbel_weight=0.7)
+    generate_sample(language_model, cuda=True, width=10, forward=100, with_gumbel=True, gumbel_weight=0.8)

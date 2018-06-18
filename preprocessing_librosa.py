@@ -116,7 +116,7 @@ if __name__ == "__main__":
             i += 1
 
     if sys.argv[1] == 'pitchfork':
-        pairs = json.load(open('pairs.json'))
+        pairs = json.load(open(os.path.join(MSD_SPLIT_FOLDER, 'pairs.json')))
         # pairing = pandas.read_csv('pitchfork_msd_long.csv', sep=',', header=0).iloc[1000:]
         index = 0
         for track_id, _ in pairs.items():

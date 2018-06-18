@@ -6,7 +6,7 @@ import os
 import json
 from LM_model import LanguageModel
 from LM_loader import MyLoader
-from settings import REVIEWS_FOLDER, MSD_SPLIT_FOLDER, MSD_NPY_FOLDER, PITCHFORK_DB_PATH
+from settings import REVIEWS_FOLDER, MSD_SPLIT_FOLDER, MSD_NPY_FOLDER, PITCHFORK_DB_PATH, DECODER_FOLDER, ENCODER_FOLDER
 from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs
 from LM_testing import generate_sample
 from review_extractor import index_transcript, clean_review
@@ -93,7 +93,7 @@ class Trainer():
             print("Epoch: {0}, train_loss: {1:.8f}, time: {2:.4f}".format(
                 e+1, total_loss, time() - start_time))
             generate_sample(self.model, cuda=True)
-            self.save_model('LanguageModel_'+str(e)+'.pt')
+            self.save_model(os.path.join(DECODER_FOLDER, 'LanguageModel_'+str(e)+'.pt'))
 
 
 def train():
@@ -115,7 +115,7 @@ def train():
     trainer = Trainer(vocab_size, model, optimizer, reviews)
     model.apply(trainer.init_weight)
     trainer.run(epochs)
-    trainer.save_model('LanguageModel.pt')
+    trainer.save_model(os.path.join(DECODER_FOLDER, 'LanguageModel.pt'))
 
 
 def train_with_audio():
@@ -124,7 +124,7 @@ def train_with_audio():
     vocab_size = len(indexer)
 
     language_model = LanguageModel(vocab_size, embedding_dim, hidden_dim, music_dim).cuda()
-    language_model.load_state_dict(torch.load('LanguageModel_4.pt'))
+    language_model.load_state_dict(torch.load(os.path.join(DECODER_FOLDER, 'LanguageModel_4.pt')))
     language_model.train()
     # filter(lambda p: p.requires_grad, language_model.parameters()))
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, language_model.parameters()))
@@ -135,17 +135,17 @@ def train_with_audio():
     local_models = []
     for segment_size in segment_size_list:
         loc_model = local_model(segment_size).cuda()
-        loc_model.load_state_dict(torch.load('local_model_'+str(segment_size)+'.pt'))
+        loc_model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'local_model_'+str(segment_size)+'.pt')))
         loc_model.eval()
         local_models.append(loc_model)
     model = global_model(n_inputs, 512).cuda()
-    model.load_state_dict(torch.load('global_model_18_27_54_9051_123.pt'))
+    model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'global_model_18_27_54_9051_123.pt')))
     model.eval()
 
     id7d_to_path = pickle.load(open(os.path.join(MSD_SPLIT_FOLDER, '7D_id_to_path.pkl'), 'rb'))
     idmsd_to_id7d = pickle.load(open(os.path.join(MSD_SPLIT_FOLDER, 'MSD_id_to_7D_id.pkl'), 'rb'))
 
-    pairs = json.load(open('pairs.json'))
+    pairs = json.load(open(os.path.join(MSD_SPLIT_FOLDER, 'pairs.json')))
 
     for e in range(epochs):
 
@@ -204,7 +204,7 @@ def train_with_audio():
         print("Epoch: {0}, train_loss: {1:.8f}, time: {2:.4f}".format(
             e+1, total_loss, time() - start_time))
         generate_sample(language_model, cuda=True)
-        torch.save(language_model.state_dict(), 'LanguageModel_audio_'+str(e)+'.pt')
+        torch.save(language_model.state_dict(), os.path.join(DECODER_FOLDER, 'LanguageModel_audio_'+str(e)+'.pt'))
 
     conn_pf.close()
 

@@ -7,7 +7,9 @@ from model import local_model, global_model
 from pub_custom_dataset import CustomDataset
 from torchnet.meter import AUCMeter
 import matplotlib.pyplot as plt
-from settings import number_labels, batch_size, epochs, learning_rate, momentum, MTAT_MP3_FOLDER, MTAT_NPY_FOLDER, MTAT_SPLIT_FOLDER, MSD_MP3_FOLDER, MSD_NPY_FOLDER, MSD_SPLIT_FOLDER, n_songs, seed, normalization, train_dataset, test_dataset
+from settings import number_labels, batch_size, epochs, learning_rate, momentum, MTAT_MP3_FOLDER, MTAT_NPY_FOLDER, \
+    MTAT_SPLIT_FOLDER, MSD_MP3_FOLDER, MSD_NPY_FOLDER, MSD_SPLIT_FOLDER, ENCODER_FOLDER, n_songs, seed, normalization, \
+    train_dataset, test_dataset
 from preprocessing_librosa import extract_features
 import os
 import pickle
@@ -25,7 +27,7 @@ def train(segment_size_list):
             open(os.path.join(MSD_SPLIT_FOLDER, 'MSD_id_to_7D_id.pkl'), 'rb'))
         train_list_pub_id = pickle.load(
             open(os.path.join(MSD_SPLIT_FOLDER, 'filtered_list_train.cP'), 'rb'))
-        train_list_pub = [id7d_to_path[idmsd_to_id7d[song]][:-9]+'.npy' for song in train_list_pub]
+        train_list_pub = [id7d_to_path[idmsd_to_id7d[song]][:-9] + '.npy' for song in train_list_pub]
     total_train_size = len(train_list_pub)
     index = list(range(total_train_size))
 
@@ -50,7 +52,7 @@ def train(segment_size_list):
     local_models = []
     for segment_size in segment_size_list:
         loc_model = local_model(segment_size).cuda()
-        loc_model.load_state_dict(torch.load('local_model_'+str(segment_size)+'.pt'))
+        loc_model.load_state_dict(os.path.join(ENCODER_FOLDER, torch.load('local_model_' + str(segment_size) + '.pt')))
         loc_model.eval()
         local_models.append(loc_model)
     model = global_model(n_inputs, 512).cuda()
@@ -66,16 +68,20 @@ def train(segment_size_list):
         print("Loading datasets...", start)
         if train_dataset == 'MTAT':
             train_features = np.concatenate(
-                [np.load(os.path.join(MTAT_NPY_FOLDER, 'training/'+train_list_pub[i])) for i in range(start, min(start+n_songs, total_train_size))])
+                [np.load(os.path.join(MTAT_NPY_FOLDER, 'training/' + train_list_pub[i])) for i in
+                 range(start, min(start + n_songs, total_train_size))])
             train_labels = np.load(
-                os.path.join(MTAT_SPLIT_FOLDER, 'y_train_pub.npy'))[[index[i] for i in range(start, min(start+n_songs, total_train_size))]]
+                os.path.join(MTAT_SPLIT_FOLDER, 'y_train_pub.npy'))[
+                [index[i] for i in range(start, min(start + n_songs, total_train_size))]]
         if train_dataset == 'MSD':
             train_features = np.concatenate(
-                [np.expand_dims(np.load(os.path.join(MSD_NPY_FOLDER, 'testing/'+train_list_pub[i]))[:, :1255], axis=0) for i in range(start, min(start+n_songs, total_train_size))])
+                [np.expand_dims(np.load(os.path.join(MSD_NPY_FOLDER, 'testing/' + train_list_pub[i]))[:, :1255], axis=0)
+                 for i in range(start, min(start + n_songs, total_train_size))])
             idmsd_to_tag = pickle.load(
                 open(os.path.join(MSD_SPLIT_FOLDER, 'msd_id_to_tag_vector.cP'), 'rb'))
             train_labels = np.concatenate(
-                [idmsd_to_tag[idmsd] for idmsd in train_list_pub_id[start:min(start+n_songs, total_train_size)]], axis=1)
+                [idmsd_to_tag[idmsd] for idmsd in train_list_pub_id[start:min(start + n_songs, total_train_size)]],
+                axis=1)
         if normalization:
             mean = np.mean(train_features, axis=0)
             var = np.var(train_features, axis=0)
@@ -106,13 +112,13 @@ def train(segment_size_list):
                 loss.backward()
                 optimizer.step()
                 epoch_loss += loss.data[0]
-            total_loss = epoch_loss/batch_number
-            train_accuracy = correct/(train_size*number_labels)
+            total_loss = epoch_loss / batch_number
+            train_accuracy = correct / (train_size * number_labels)
             # print("Epoch: {0}, loss: {1:.8f}".format(e+1, total_loss))
             # print("Epoch: {0}, train_accuracy: {1:.8f}".format(e+1, train_accuracy))
 
     print(number_tags)
-    torch.save(model.state_dict(), 'global_model.pt')
+    torch.save(model.state_dict(), os.path.join(ENCODER_FOLDER, 'global_model.pt'))
     print("Finished training")
 
 
@@ -125,7 +131,7 @@ def test(segment_size_list):
             open(os.path.join(MSD_SPLIT_FOLDER, 'MSD_id_to_7D_id.pkl'), 'rb'))
         test_list_pub_id = pickle.load(
             open(os.path.join(MSD_SPLIT_FOLDER, 'filtered_list_test.cP'), 'rb'))
-        test_list_pub = [id7d_to_path[idmsd_to_id7d[song]][:-9]+'.npy' for song in test_list_pub_id]
+        test_list_pub = [id7d_to_path[idmsd_to_id7d[song]][:-9] + '.npy' for song in test_list_pub_id]
         del id7d_to_path, idmsd_to_id7d
 
     total_test_size = len(test_list_pub)
@@ -146,11 +152,11 @@ def test(segment_size_list):
     local_models = []
     for segment_size in segment_size_list:
         loc_model = local_model(segment_size).cuda()
-        loc_model.load_state_dict(torch.load('local_model_'+str(segment_size)+'.pt'))
+        loc_model.load_state_dict(os.path.join(ENCODER_FOLDER, torch.load('local_model_' + str(segment_size) + '.pt')))
         loc_model.eval()
         local_models.append(loc_model)
     model = global_model(n_inputs, 512).cuda()
-    model.load_state_dict(torch.load('global_model_18_27_54_9051_123.pt'))
+    model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'global_model_18_27_54_9051_123.pt')))
     model.eval()
     auc = AUCMeter()
 
@@ -158,16 +164,19 @@ def test(segment_size_list):
         print("Loading dataset...", start)
         if test_dataset == 'MTAT':
             test_features = np.concatenate(
-                [np.load(os.path.join(MTAT_NPY_FOLDER, 'testing/'+test_list_pub[i])) for i in range(start, min(start+n_songs, total_test_size))])
+                [np.load(os.path.join(MTAT_NPY_FOLDER, 'testing/' + test_list_pub[i])) for i in
+                 range(start, min(start + n_songs, total_test_size))])
             test_labels = np.load(
-                os.path.join(MTAT_SPLIT_FOLDER, 'y_test_pub.npy'))[start:min(start+n_songs, total_test_size)]
+                os.path.join(MTAT_SPLIT_FOLDER, 'y_test_pub.npy'))[start:min(start + n_songs, total_test_size)]
         if test_dataset == 'MSD':
             test_features = np.concatenate(
-                [np.expand_dims(np.load(os.path.join(MSD_NPY_FOLDER, 'testing/'+test_list_pub[i]))[:, :1255], axis=0) for i in range(start, min(start+n_songs, total_test_size))])
+                [np.expand_dims(np.load(os.path.join(MSD_NPY_FOLDER, 'testing/' + test_list_pub[i]))[:, :1255], axis=0)
+                 for i in range(start, min(start + n_songs, total_test_size))])
             idmsd_to_tag = pickle.load(
                 open(os.path.join(MSD_SPLIT_FOLDER, 'msd_id_to_tag_vector.cP'), 'rb'))
             test_labels = np.concatenate(
-                [idmsd_to_tag[idmsd] for idmsd in test_list_pub_id[start:min(start+n_songs, total_test_size)]], axis=1)
+                [idmsd_to_tag[idmsd] for idmsd in test_list_pub_id[start:min(start + n_songs, total_test_size)]],
+                axis=1)
 
         if normalization:
             mean = np.mean(test_features, axis=0)

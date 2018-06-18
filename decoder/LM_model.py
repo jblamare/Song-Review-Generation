@@ -44,9 +44,11 @@ class LanguageModel(nn.Module):
         x = F.embedding(x, self.linearOut.weight)
         x = self.dropout_wordvector(x)
         x, _ = self.lstm0(x)
-        x = self.dropout_lstm(x)
+        if self.training:
+            x = self.dropout_lstm(x)
         x, _ = self.lstm1(x)
-        x = self.dropout_lstm(x)
+        if self.training:
+            x = self.dropout_lstm(x)
         x, _ = self.lstm2(x)
         combined = torch.cat((x, m), dim=2)
         x, _ = self.lstm3(combined)
@@ -60,7 +62,7 @@ class LanguageModel(nn.Module):
     def generate(self, input, forward=10, m=None, with_gumbel=False, gumbel_weight=1.0):
 
         if m is None:
-            m = Variable(torch.zeros(input.shape[0], input.shape[1],
+            m = Variable(torch.zeros(input.shape[0], 1,
                                      self.music_dim).cuda(), requires_grad=False)
         else:
             m = m.unsqueeze(1)
@@ -85,7 +87,7 @@ class LanguageModel(nn.Module):
         if forward > 0:
             outputs = []
             h = torch.max(logits[:, -1:, :], dim=2)[1]
-            for i in range(forward):
+            for i in range(forward - 1):
                 h = F.embedding(h, self.linearOut.weight)  # (n, t, c)
                 h, states[0] = self.lstm0(h, states[0])
                 h, states[1] = self.lstm1(h, states[1])
@@ -101,45 +103,64 @@ class LanguageModel(nn.Module):
             logits = torch.cat([logits] + outputs, dim=1)
         return logits
 
-    # def generate(self, text_features, forward, with_gumbel, gumbel_weight=1.0, m=None, cuda=True):
-    #     x = torch.from_numpy(np.transpose(text_features)).long()
+    # def random_search(self, input, forward=10, m=None, width=10, with_gumbel=False, gumbel_weight=1.0):
     #
-    #     previous_states = [(None, None), (None, None), (None, None), (None, None)]
+    #     best_score = 10E10
+    #     best_entry = None
+    #     best_X = None
+    #     loss_function = nn.CrossEntropyLoss()
     #
-    #     for i in range(forward):
-    #         x = Variable(x)
-    #         if cuda:
-    #             x = x.cuda()
-    #             if m is not None:
-    #                 m = m.cuda()
+    #     for _ in range(width):
+    #         logits = self.generate(input, forward=forward, m=m, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight)
+    #         entry = torch.max(logits, dim=2)[1].long()[0, :]
+    #         X = torch.cat((Variable(torch.from_numpy(np.zeros(1))).long().cuda(), entry[:-1]), dim=0).unsqueeze(1)
     #
-    #         if m is not None:
-    #             expanded_music = m.unsqueeze(1).expand(
-    #                 x.shape[0], x.shape[1], -1).contiguous()
-    #         else:
-    #             expanded_music = Variable(torch.zeros(x.shape[0], x.shape[1],
+    #         if m is None:
+    #             expanded_music = Variable(torch.zeros(X.shape[0], X.shape[1],
     #                                      self.music_dim).cuda(), requires_grad=False)
-    #
-    #         hidden = F.embedding(x, self.linearOut.weight)
-    #         previous_states[0] = self.lstm0(hidden)
-    #         previous_states[1] = self.lstm1(previous_states[0][0])
-    #         previous_states[2] = self.lstm2(previous_states[1][0])
-    #         combined = torch.cat((previous_states[2][0], expanded_music), dim=2)
-    #         previous_states[3] = self.lstm3(combined)
-    #         hidden = self.linearOut(previous_states[3][0])
-    #
-    #         out = out[-1, :, :]
-    #         if with_gumbel:
-    #             gumbel = Variable(sample_gumbel(shape=out.size(), out=out.data.new()))
-    #             out += gumbel * gumbel_weight
-    #         pred = out.data.max(1, keepdim=True)[1]
-    #         pred = torch.t(pred)
-    #         if i == 0:
-    #             generated = pred
     #         else:
-    #             generated = torch.cat([generated, pred], dim=0)
-    #         x = torch.cat([x.data, pred], dim=0)
-    #     return torch.t(generated)
+    #             expanded_music = m.unsqueeze(1).expand(X.shape[0], X.shape[1], -1).contiguous()
+    #
+    #         out = self.forward(X, expanded_music)
+    #         out = out.view(out.shape[0] * out.shape[1], out.shape[2])
+    #         Y = entry.view(-1)
+    #         loss = loss_function(out, Y).data.cpu().numpy()[0]
+    #
+    #         if loss < best_score:
+    #             best_entry = entry
+    #             best_X = X.squeeze(1)
+    #             best_score = loss
+    #
+    #     return best_X
+
+    def random_search(self, input, forward=10, m=None, width=10, with_gumbel=False, gumbel_weight=1.0):
+
+        best_score = 10E10
+        best_entry = None
+        best_X = None
+        loss_function = nn.CrossEntropyLoss()
+
+        for _ in range(width):
+            logits = self.generate(input, forward=forward, m=m, with_gumbel=with_gumbel, gumbel_weight=gumbel_weight)
+            entry = torch.max(logits, dim=2)[1].long()[0, :]
+            Y = entry[1:]
+            X = entry[:-1].unsqueeze(1)
+
+            if m is None:
+                expanded_music = Variable(torch.zeros(X.shape[0], X.shape[1],
+                                         self.music_dim).cuda(), requires_grad=False)
+            else:
+                expanded_music = m.unsqueeze(1).expand(X.shape[0], X.shape[1], -1).contiguous()
+
+            out = self.forward(X, expanded_music)
+            out = out.view(out.shape[0] * out.shape[1], out.shape[2])
+            loss = loss_function(out, Y).data.cpu().numpy()[0]
+
+            if loss < best_score:
+                best_entry = entry
+                best_score = loss
+
+        return best_entry
 
 
 class LockedDropout(torch.nn.Module):

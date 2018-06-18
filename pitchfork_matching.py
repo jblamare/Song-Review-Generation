@@ -201,7 +201,7 @@ def create_pairing_from_msd_new_pitchfork():
         except KeyError:
             continue
 
-    json.dump(pairs, open('pairs.json', 'w'))
+    json.dump(pairs, open(os.path.join(MSD_SPLIT_FOLDER, 'pairs.json'), 'w'))
     print(n_reviews)
     print(n_matches)
 

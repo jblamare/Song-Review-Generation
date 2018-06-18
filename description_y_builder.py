@@ -14,7 +14,7 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 
 from pub_custom_dataset import CustomDataset
 from settings import batch_size, MTAT_SPLIT_FOLDER, AWS_FOLDER, CLIP_INFO_FILE, MTAT_GENERATION_SPLIT, MTAT_NPY_FOLDER, \
-    n_songs, normalization
+    n_songs, normalization, ENCODER_FOLDER, DECODER_FOLDER
 
 
 def handle_list(path_list, description_dict, db):
@@ -131,11 +131,11 @@ if __name__ == '__main__':
     local_models = []
     for segment_size in segment_size_list:
         loc_model = local_model(segment_size).cuda()
-        loc_model.load_state_dict(torch.load('local_model_'+str(segment_size)+'.pt'))
+        loc_model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'local_model_'+str(segment_size)+'.pt')))
         loc_model.eval()
         local_models.append(loc_model)
     model = global_model(n_inputs, 512).cuda()
-    model.load_state_dict(torch.load('global_model_18_27_54_9051_123.pt'))
+    model.load_state_dict(torch.load(os.path.join(ENCODER_FOLDER, 'global_model_18_27_54_9051_123.pt')))
 
     db = pd.read_csv(CLIP_INFO_FILE, sep="\t")
     description_dict = json.load(open(os.path.join(AWS_FOLDER, 'descriptions.json')))
