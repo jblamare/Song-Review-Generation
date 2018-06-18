@@ -3,13 +3,12 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
-from model import local_model
-from pub_custom_dataset import CustomDataset
+from encoder.model import local_model
+from encoder.pub_custom_dataset import CustomDataset
 from torchnet.meter import AUCMeter
 import matplotlib.pyplot as plt
-from settings import number_labels, batch_size, epochs, learning_rate, momentum, MTAT_MP3_FOLDER, MTAT_NPY_FOLDER, \
+from settings import number_labels, batch_size, epochs, learning_rate, momentum, MTAT_NPY_FOLDER, \
     MTAT_SPLIT_FOLDER, ENCODER_FOLDER, n_songs, normalization, seed
-from preprocessing_librosa import extract_features
 import os
 import pickle
 import sys

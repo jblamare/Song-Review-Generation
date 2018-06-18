@@ -5,10 +5,10 @@ import os
 import json
 import pickle
 
-from LM_model import LanguageModel
-from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs, music_dim
+from decoder.LM_model import LanguageModel
+from decoder.LM_settings import embedding_dim, hidden_dim, music_dim
 from settings import REVIEWS_FOLDER, MSD_NPY_FOLDER, MSD_SPLIT_FOLDER, DECODER_FOLDER, ENCODER_FOLDER
-from model import local_model, global_model
+from encoder.model import local_model, global_model
 
 import torch._utils
 try:

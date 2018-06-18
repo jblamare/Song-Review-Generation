@@ -4,18 +4,13 @@ import numpy as np
 from torch.autograd import Variable
 import os
 import json
-from LM_model import LanguageModel
-from LM_loader import MyLoader
-from settings import REVIEWS_FOLDER, MSD_SPLIT_FOLDER, MSD_NPY_FOLDER, PITCHFORK_DB_PATH, DECODER_FOLDER, ENCODER_FOLDER
-from LM_settings import batch_size, embedding_dim, hidden_dim, music_dim, epochs
-from LM_testing import generate_sample
-from review_extractor import index_transcript, clean_review
-from model import local_model, global_model
+from decoder.LM_model import LanguageModel
+from decoder.LM_loader import MyLoader
+from settings import REVIEWS_FOLDER, MSD_SPLIT_FOLDER, MSD_NPY_FOLDER, DECODER_FOLDER, ENCODER_FOLDER
+from decoder.LM_settings import embedding_dim, hidden_dim, music_dim, epochs
+from decoder.LM_testing import generate_sample
+from encoder.model import local_model, global_model
 import pickle
-import pandas
-import sqlite3
-
-from time import time
 
 from time import time
 

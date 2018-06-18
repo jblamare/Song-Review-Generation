@@ -6,15 +6,13 @@ from time import time
 import numpy as np
 import torch
 from torch.autograd import Variable
-from model import local_model, global_model
-import random
+from encoder.model import local_model, global_model
 
-from mosestokenizer import MosesTokenizer, MosesSentenceSplitter
-from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.tokenize import word_tokenize
 
-from pub_custom_dataset import CustomDataset
+from encoder.pub_custom_dataset import CustomDataset
 from settings import batch_size, MTAT_SPLIT_FOLDER, AWS_FOLDER, CLIP_INFO_FILE, MTAT_GENERATION_SPLIT, MTAT_NPY_FOLDER, \
-    n_songs, normalization, ENCODER_FOLDER, DECODER_FOLDER
+    n_songs, normalization, ENCODER_FOLDER
 
 
 def handle_list(path_list, description_dict, db):

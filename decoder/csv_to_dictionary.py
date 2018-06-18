@@ -1,13 +1,7 @@
-import sqlite3
 import os
-import re
-from unicodedata import normalize
-import random
 from settings import PITCHFORK_CSV_PATH, REVIEWS_FOLDER
-from nltk.tokenize import sent_tokenize, word_tokenize
-from review_extractor import clean_review
+from dataset_building.review_extractor import clean_review
 import pandas as pd
-import numpy as np
 import json
 
 

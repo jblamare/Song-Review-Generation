@@ -33,7 +33,7 @@ def clean_review(text):
     text = re.sub("\s\s+", " ", text)
     text = re.sub('^Best new [A-Za-z]*', "", text)
     text = text.strip()
-    text = re.sub('^[0-9] \/ [0-9] [Aa]lbums', "", text)
+    text = re.sub('^[0-9] / [0-9] [Aa]lbums', "", text)
     text = text.strip()
     # text = text.replace("\\n\\", "\n")
     start_dot_matches = re.finditer("\.\.\.", text)
